@@ -1,0 +1,125 @@
+# =========================
+# ENTORNOS VIRTUALES
+# =========================
+.venv/
+venv/
+env/
+ENV/
+env_ticket/
+*.egg-info/
+
+# =========================
+# PYTHON CACHES / BUILD
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.build/
+build/
+dist/
+*.spec          # PyInstaller
+.installed.cfg
+
+# =========================
+# SECRETOS / CONFIG
+# =========================
+.env
+*.env
+.env.*          # .env.local, etc.
+instance/       # Flask instance folder con configs/secretos (si la usas)
+
+# =========================
+# TESTS / COVERAGE
+# =========================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.mypy_cache/
+.pytype/
+.pyre/
+.ruff_cache/
+pytestdebug.log
+
+# =========================
+# JUPYTER / DATOS TEMP
+# =========================
+.ipynb_checkpoints/
+*.ipynb_save
+*.checkpoint.ipynb
+
+# =========================
+# LOGS / DUMPS / TEMP
+# =========================
+logs/
+*.log
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# =========================
+# DBs LOCALES (desarrollo)
+# =========================
+*.db
+*.sqlite
+*.sqlite3
+
+# =========================
+# SISTEMA OPERATIVO / IDE
+# =========================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# VS Code / JetBrains
+.vscode/
+.code-workspace
+.idea/
+*.iml
+
+# =========================
+# FRONTEND (si tienes)
+# =========================
+node_modules/
+pnpm-lock.yaml
+yarn.lock
+.npm/
+.cache/
+
+# =========================
+# ARTEFACTOS GRANDES / BINARIOS
+# =========================
+*.exe
+*.dll
+*.so
+*.dylib
+*.zip
+*.7z
+*.tar
+*.tar.gz
+*.parquet
+*.csv
+*.xlsx
+*.xls
+# (Si necesitas versionar datos grandes, usa Git LFS y quita la extensión de aquí)
+
+# =========================
+# OTROS
+# =========================
+.python-version     # si usas pyenv y no quieres fijar versión en repo

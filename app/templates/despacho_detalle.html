@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Detalle despacho</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='despacho_estilos.css') }}">
+</head>
+<body>
+  <!-- 👇 aquí le paso codppc y cododc como data-atributos -->
+  <main class="container"
+        data-codppc="{{ codppc }}"
+        data-cododc="{{ cododc }}">
+
+    <input
+      id="scanInput"
+      type="text"
+      placeholder="Escanea el QR aquí…"
+      autocomplete="off"
+      class="scan-input"
+      style="font-size:16px;padding:8px 12px;width:100%;margin-bottom:12px;border-radius:8px;border:1px solid #4b5563;">
+
+    <header class="toolbar">
+      <h1>📦 Detalle despacho</h1>
+      <a href="/despachos" class="btn-volver">← Volver a lista</a>
+      <button id="btnTerminado" class="btn-terminado-detalle">
+      ✅ Terminado
+      </button>
+    </header>
+
+    <section class="table-wrap">
+      <h2 id="detalleTitulo">
+        Despacho {{ codppc }} / {{ cododc }}
+      </h2>
+      <table id="tablaDetalle">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Cód. producto pedido</th>
+            <th>Descripción</th>
+            <th>Código parte</th>
+            <th>UM</th>
+            <th>UE</th>
+            <th>Cant. a despachar</th>
+            <th>Cant. abastecida</th>
+            <th>Cant. scaneada</th>
+            <th>Diferencia</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+  <!-- 👇 ahora cargas el js externo -->
+  <script src="{{ url_for('static', filename='despachos_detalle_front.js') }}"></script>
+</body>
+
+</html>
+

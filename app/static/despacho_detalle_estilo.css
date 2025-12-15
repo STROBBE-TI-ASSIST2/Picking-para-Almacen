@@ -1,0 +1,37 @@
+.detalle-wrap {
+  margin-top: 16px;
+}
+
+.detalle-wrap h2 {
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(55, 65, 81, 0.9);
+  color: #e5e7eb;
+}
+
+#tablaDetalle {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+
+#tablaDetalle thead th,
+#tablaDetalle tbody td {
+  padding: 8px 10px;
+  font-size: 0.8rem;
+}
+
+#tablaDetalle thead th {
+  background: rgba(15, 23, 42, 0.95);
+  text-align: left;
+  color: #9ca3af;
+}
+
+#tablaDetalle tbody tr:nth-child(even) {
+  background: rgba(15, 23, 42, 0.75);
+}
+
+#tablaDetalle tbody tr:nth-child(odd) {
+  background: rgba(15, 23, 42, 0.55);
+}

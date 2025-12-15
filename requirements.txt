@@ -1,0 +1,5 @@
+dotenv~=0.9.9
+python-dotenv~=1.2.1
+SQLAlchemy~=2.0.44
+Flask~=3.1.2
+Flask-JWT-Extended~=4.7.1
