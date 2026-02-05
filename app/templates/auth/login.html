@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login | Picking almacén</title>
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="theme-color" content="#6D93A6">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/login_tablet.css') }}">
+</head>
+
+<body>
+  <div class="login-container">
+
+    <!-- IZQUIERDA: imagen -->
+    <div class="login-left">
+      <img
+        src="{{ url_for('static', filename='imagenes/fondo_login_tablet.png') }}"
+        alt="Fondo login"
+      >
+    </div>
+
+    <!-- DERECHA: panel login -->
+    <div class="login-right">
+      <h2>INICIO DE SESION</h2>
+
+      <form id="loginForm" novalidate>
+        <label for="username">Usuario:</label>
+        <input
+          id="username"
+          name="username"
+          type="text"
+          autocomplete="username"
+          required
+        >
+
+        <label for="password">Contraseña:</label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          required
+        >
+
+        <button type="submit">Iniciar sesión</button>
+
+        <p id="error" class="error"></p>
+
+        <div class="logo">
+          <img
+            src="{{ url_for('static', filename='imagenes/logo.png') }}"
+            alt="Logo"
+          >
+        </div>
+      </form>
+
+      <div class="social-icons">
+        <a href="https://www.linkedin.com" target="_blank" rel="noopener">
+          <img src="{{ url_for('static', filename='imagenes/icons/icon_linkedin.png') }}" alt="LinkedIn">
+        </a>
+        <a href="https://github.com" target="_blank" rel="noopener">
+          <img src="{{ url_for('static', filename='imagenes/icons/icon_github.png') }}" alt="GitHub">
+        </a>
+        <a href="https://wa.me/51999999999" target="_blank" rel="noopener">
+          <img src="{{ url_for('static', filename='imagenes/icons/icon_whatsapp.png') }}" alt="WhatsApp">
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/login_front.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/pwa.js') }}" defer></script>
+</body>
+</html>

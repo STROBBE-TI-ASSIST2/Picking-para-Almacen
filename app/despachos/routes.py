@@ -72,9 +72,7 @@ def terminar():
 @despachos_bp.get("/ver/<codppc>/<cododc>")
 #@jwt_required()
 def ver_detalle_html(codppc, cododc):
-    return render_template("despacho_detalle.html",
-                          codppc=codppc,
-                          cododc=cododc)
+    return render_template("despachos/detalle.html", codppc=codppc, cododc=cododc)
 
 @despachos_bp.get("/detalle/leer")
 @jwt_required()

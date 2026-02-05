@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Preparación de Despacho Local (QR Picking)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="theme-color" content="#6D93A6">
+
+  <!-- ✅ NUEVO CSS tipo tarjetas + topbar -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/preparacion_qr.css') }}">
+</head>
+
+<body>
+
+  <!-- ✅ TOP BAR (igual que tus otras pantallas) -->
+  <header class="top-bar">
+    <h1>PREPARACIÓN DE DESPACHO LOCAL (QR PICKING)</h1>
+
+    <div class="actions">
+      <!-- Home (opcional): regresa al menú logístico o principal -->
+      <a class="icon-btn" href="{{ url_for('menu_view') }}" title="Inicio">
+        <img src="{{ url_for('static', filename='imagenes/home_app.png') }}" alt="Inicio">
+      </a>
+
+      <!-- Refresh -->
+      <button class="icon-btn" id="btnRefresh" title="Refrescar">
+        <img src="{{ url_for('static', filename='imagenes/refresh.png') }}" alt="Refrescar">
+      </button>
+
+      <!-- Logout -->
+      <button class="icon-btn" id="btnCambiarUsuario" title="Cambiar usuario">
+        <img src="{{ url_for('static', filename='imagenes/exit.png') }}" alt="Salir">
+      </button>
+    </div>
+  </header>
+
+  <!-- ✅ CONTENIDO -->
+  <main class="page">
+    <!-- GRID: Cards + Panel filtros -->
+    <section class="content">
+
+      <!-- ✅ LISTA EN TARJETAS -->
+      <div class="cards-area">
+        <div id="cards" class="cards-grid">
+          <!-- JS inserta aquí las tarjetas -->
+        </div>
+
+        <!-- paginación abajo -->
+
+      </div>
+
+      <!-- ✅ PANEL FILTROS (derecha) -->
+    <aside class="filters-panel">
+      <h3>FILTROS</h3>
+
+      <div class="quick-filters">
+        <button type="button" class="chip" data-estado="PENDIENTE">PENDIENTE</button>
+        <button type="button" class="chip" data-estado="">TODOS</button>
+        <button type="button" class="chip" data-estado="ATENDIDO">ATENDIDO</button>
+      </div>
+    </aside>
+
+  <!-- ✅ JS -->
+  <script src="{{ url_for('static', filename='js/preparacion_qr_front.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/pwa.js') }}" defer></script>
+
+  <!-- ✅ Logout JWT (cookies) -->
+  <script defer>
+    document.addEventListener("DOMContentLoaded", () => {
+      const btnLogout = document.getElementById("btnCambiarUsuario");
+      const btnRefresh = document.getElementById("btnRefresh");
+
+      if (btnRefresh) {
+        btnRefresh.addEventListener("click", (e) => {
+          e.preventDefault();
+          // el front expone cargar() (lo dejamos así)
+          if (typeof window.cargarDespachos === "function") window.cargarDespachos(true);
+        });
+      }
+
+      if (btnLogout) {
+        btnLogout.addEventListener("click", async (e) => {
+          e.preventDefault();
+          try {
+            await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+          } catch (err) {
+            console.error(err);
+          }
+          window.location.href = "{{ url_for('login_view') }}";
+        });
+      }
+
+      // chips rápidos
+      document.querySelectorAll(".chip").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const estado = btn.dataset.estado ?? "";
+          const sel = document.getElementById("estado");
+          sel.value = estado;
+          if (typeof window.cargarDespachos === "function") window.cargarDespachos(true);
+        });
+      });
+    });
+  </script>
+
+</body>
+</html>

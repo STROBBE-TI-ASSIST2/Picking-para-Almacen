@@ -1,15 +1,18 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token
-from datetime import timedelta
+from flask_jwt_extended import (
+    create_access_token,
+    set_access_cookies,
+    unset_jwt_cookies
+)
 from .service import autenticar_usuario
 
 auth_bp = Blueprint("auth", __name__)
 
 @auth_bp.post("/login")
 def login():
-    body = request.get_json() or {}
-    username = body.get("username")
-    password = body.get("password")
+    body = request.get_json(silent=True) or {}
+    username = (body.get("username") or "").strip()
+    password = (body.get("password") or "").strip()
 
     if not username or not password:
         return jsonify({"msg": "Falta usuario o contraseña"}), 400
@@ -18,7 +21,6 @@ def login():
     if not user:
         return jsonify({"msg": "Usuario o contraseña incorrectos"}), 401
 
-    # identity principal del JWT
     access_token = create_access_token(
         identity=str(user["id_usuario"]),
         additional_claims={
@@ -29,7 +31,22 @@ def login():
         }
     )
 
-    return jsonify({
-        "access_token": access_token,
+    # ✅ Respuesta JSON normal
+    resp = jsonify({
+        "msg": "login ok",
         "user": user
-    }), 200
+        # Si quieres mantenerlo por compatibilidad:
+        # "access_token": access_token
+    })
+
+    # ✅ CLAVE: setear JWT en cookie
+    set_access_cookies(resp, access_token)
+
+    return resp, 200
+
+
+@auth_bp.post("/logout")
+def logout():
+    resp = jsonify({"msg": "logout ok"})
+    unset_jwt_cookies(resp)
+    return resp, 200

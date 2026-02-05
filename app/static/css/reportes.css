@@ -1,0 +1,87 @@
+body {
+  font-family: 'Roboto', sans-serif;
+  margin: 0;
+  padding: 20px;
+  background: linear-gradient(135deg, #1a3f6e, #2E6CA4);
+  color: white;
+}
+
+.form-container {
+  max-width: 700px;
+  margin: auto;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+}
+
+h2, h3 {
+  text-align: center;
+}
+
+.btn {
+  background-color: #2E6CA4;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  font-size: 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 16px;
+  display: block;
+  width: 100%;
+}
+
+.btn:hover {
+  background-color: #1f4a72;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.iframe-container {
+  margin-top: 20px;
+  width: 100%;
+  height: 400px;
+}
+
+.iframe-container iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 8px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .btn {
+    font-size: 16px;
+  }
+
+  .iframe-container {
+    height: 300px;
+  }
+}
+/* Estilo para el botón Power BI */
+.btn-powerbi {
+  display: inline-block;
+  padding: 12px 24px;
+  font-size: 20px;
+  background: linear-gradient(135deg, #2E6CA4, #1a3f6e);
+  color: white;
+  text-decoration: none;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(46, 108, 164, 0.6);
+  transition: background 0.3s ease, transform 0.2s ease;
+  margin-top: 20px;
+}
+
+.btn-powerbi:hover {
+  background: linear-gradient(135deg, #1f4a72, #0e2a47);
+  transform: scale(1.05);
+}

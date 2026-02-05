@@ -1,0 +1,197 @@
+/* ==============================
+   RESET
+============================== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  font-family: 'Segoe UI', sans-serif;
+  background: #d9d9d9;
+  overflow: hidden;
+}
+
+/* ==============================
+   TOP BAR
+============================== */
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #6D93A6;
+  color: #fff;
+  padding: 0.5rem 1.5rem;
+  height: 70px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 100; /* siempre arriba */
+}
+
+.top-bar .logo { display: flex; align-items: center; gap: 10px; }
+.top-bar .logo img { height: 60px; width: auto; display: block; }
+
+.top-bar h1 {
+  font-size: 2rem;
+  text-align: center;
+  flex-grow: 1;
+  letter-spacing: 0.5px;
+  font-weight: 800;
+}
+
+/* Acciones derecha */
+.top-bar .actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* ✅ Botones de iconos SIN fondo blanco */
+.icon-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  outline: none;
+  box-shadow: none;
+  cursor: pointer;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+}
+
+.icon-btn img {
+  height: 40px;
+  width: 40px;
+  display: block;
+}
+
+/* Hover elegante */
+.icon-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* ==============================
+   LAYOUT
+============================== */
+.layout {
+  height: calc(100vh - 70px);
+  display: grid;
+  grid-template-columns: 1fr 120px;
+}
+
+/* ==============================
+   PANEL IZQUIERDO
+============================== */
+.left-panel {
+  padding: 2.5rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2.2rem;
+}
+
+/* ==============================
+   OPCIONES
+============================== */
+.big-option {
+  min-height: 110px;
+  height: 300px;
+  width: 100%;
+
+  background: #f7f7f7;
+  border: 2px solid #2b2b2b;
+  border-radius: 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+
+  text-decoration: none;
+  color: #111;
+  font-weight: 800;
+  font-size: 1.4rem;
+
+  box-shadow: 0 8px 18px rgba(0,0,0,.18);
+  transition: all .15s ease;
+}
+
+.big-option:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 24px rgba(0,0,0,.22);
+  background: #fff;
+}
+
+.big-option.disabled {
+  opacity: .55;
+  pointer-events: none;
+}
+
+/* ==============================
+   PANEL DERECHO
+============================== */
+.right-panel {
+  position: relative;
+  background: #d9d9d9;
+  overflow: hidden;
+}
+
+/* ==============================
+   FRANJA BLANCA (DETRÁS DEL TOPBAR)
+============================== */
+.vertical-tag {
+  position: absolute;
+  top: 0;                 /* ✅ llega hasta arriba */
+  right: 0;
+  width: 120px;
+  height: 100%;
+
+  background: #fff;
+  border-left: 2px solid #cfcfcf;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 1;             /* ✅ queda debajo del topbar */
+  pointer-events: none;
+}
+
+
+.vertical-tag span {
+  transform: rotate(-90deg);
+  font-size: 4rem;
+  font-weight: 900;
+  color: #6D93A6;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+/* ==============================
+   RESPONSIVE
+============================== */
+@media (max-width: 992px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .right-panel {
+    display: none;
+  }
+
+  .left-panel {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .top-bar h1 {
+    font-size: 1.4rem;
+  }
+
+  .top-bar .logo img {
+    height: 52px;
+  }
+}

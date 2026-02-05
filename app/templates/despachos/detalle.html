@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Detalle despacho</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <!-- CSS nuevo -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/detalle_despacho.css') }}">
+</head>
+
+<body>
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <h1>PREPARACION DE DESPACHO LOCAL PICKING</h1>
+
+    <div class="actions">
+      <!-- Home (opcional): regresa al menú logístico o principal -->
+      <a class="icon-btn" href="{{ url_for('menu_view') }}" title="Inicio">
+        <img src="{{ url_for('static', filename='imagenes/home_app.png') }}" alt="Inicio">
+      </a>
+
+      <!-- Refresh -->
+      <button class="icon-btn" id="btnRefresh" title="Refrescar">
+        <img src="{{ url_for('static', filename='imagenes/refresh.png') }}" alt="Refrescar">
+      </button>
+
+      <!-- Logout -->
+      <button class="icon-btn" id="btnCambiarUsuario" title="Cambiar usuario">
+        <img src="{{ url_for('static', filename='imagenes/exit.png') }}" alt="Salir">
+      </button>
+    </div>
+  </header>
+
+
+  <!-- CONTENIDO -->
+  <main class="page container"
+        data-codppc="{{ codppc }}"
+        data-cododc="{{ cododc }}">
+
+    <!-- CABECERA DATOS -->
+    <section class="header-grid">
+
+      <div class="field">
+        <label>NRO. ORDEN</label>
+        <div class="value" id="nroOrden">-</div>
+      </div>
+
+      <div class="field">
+        <label>FECHA</label>
+        <div class="value" id="fechaDoc">-</div>
+      </div>
+
+      <div class="field">
+        <label>NRO O/D</label>
+        <div class="value" id="nroOD">-</div>
+      </div>
+
+      <div class="field">
+        <label>REGISTRADO POR</label>
+        <div class="value blue" id="registradoPor">-</div>
+      </div>
+
+      <div class="field">
+        <label>PREPARADO POR</label>
+        <div class="value blue" id="preparadoPor">-</div>
+      </div>
+
+      <div class="field mini">
+        <label>INICIO</label>
+        <div class="icon-box">
+          <img src="{{ url_for('static', filename='imagenes/icons/inicio.png') }}"
+               id="btnInicio"
+               class="btn-img"
+               alt="Iniciar">
+        </div>
+      </div>
+
+      <div class="field mini">
+        <label>FIN</label>
+        <div class="icon-box">
+          <img src="{{ url_for('static', filename='imagenes/icons/fin.png') }}"
+               id="btnFin"
+               class="btn-img"
+               alt="Finalizar">
+        </div>
+      </div>
+
+
+      <div class="field mini">
+        <label>T.PREP</label>
+        <div class="value" id="tiempoPrep">-</div>
+      </div>
+
+      <div class="field">
+        <label>NRO PEDIDO</label>
+        <div class="value" id="nroPedido">{{ codppc }}</div>
+      </div>
+
+      <div class="field">
+        <label>CLIENTE</label>
+        <div class="value" id="cliente">-</div>
+      </div>
+
+      <div class="field wide">
+        <label>OBS</label>
+        <div class="value" id="obs">-</div>
+      </div>
+
+    </section>
+
+    <!-- INPUT ESCANEO -->
+
+    <!-- TABLA -->
+    <section class="table-wrap">
+      <table class="grid" id="tablaDetalle">
+        <thead>
+          <tr>
+            <th>ITEM</th>
+            <th>CÓDIGO</th>
+            <th>DESCRIPCIÓN</th>
+            <th>UM</th>
+            <th>CAJA</th>
+            <th>UE</th>
+            <th>CANT. PEDIDO</th>
+            <th>CANT. ESCANEADA</th>
+            <th>UBICACIÓN</th>
+            <th>QUITAR</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Tu JS inserta filas aquí -->
+        </tbody>
+      </table>
+    </section>
+
+  </main>
+
+  <script src="{{ url_for('static', filename='js/despachos_detalle_front.js') }}" defer></script>
+</body>
+</html>

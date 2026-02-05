@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+  <title>Menú Principal</title>
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="theme-color" content="#6D93A6">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/stylemenu.css') }}">
+</head>
+
+<body>
+  <header class="top-bar">
+    <div class="logo">
+      <!-- ✅ normalizado a imagenes/ -->
+      <img src="{{ url_for('static', filename='imagenes/stb_logo.png') }}" alt="STROBBE" />
+    </div>
+
+    <h1>MENÚ PRINCIPAL</h1>
+
+    <div class="actions">
+      <img src="{{ url_for('static', filename='imagenes/world.png') }}" alt="Idioma" />
+
+      <!-- ✅ Logout front (JWT) -->
+      <a href="#" id="btnLogoutTop">
+        <img src="{{ url_for('static', filename='imagenes/logout.png') }}" alt="Salir">
+      </a>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="menu-column">
+      <div class="menu-section">
+
+        <!-- ✅ Menú logístico como vista HTML -->
+        <a class="menu-item" href="{{ url_for('menu_logistico_view') }}">
+          <div class="menu-img">
+            <img src="{{ url_for('static', filename='imagenes/logistico.png') }}" alt="Logístico">
+          </div>
+          <h3>Logístico</h3>
+        </a>
+
+        <a class="menu-item" href="#">
+          <div class="menu-img">
+            <img src="{{ url_for('static', filename='imagenes/produccion.png') }}" alt="Producción">
+          </div>
+          <h3>Producción</h3>
+        </a>
+
+        <a class="menu-item" href="#">
+          <div class="menu-img">
+            <img src="{{ url_for('static', filename='imagenes/control_calidad.png') }}" alt="Control de Calidad">
+          </div>
+          <h3>Control de Calidad</h3>
+        </a>
+      </div>
+    </div>
+
+    <div class="image-section">
+      <img src="{{ url_for('static', filename='imagenes/fondo_menu.png') }}" alt="Maquinaria STROBBE" />
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>SELECCIONE EL SISTEMA</p>
+  </footer>
+
+  <script defer>
+    document.addEventListener("DOMContentLoaded", () => {
+      const btn = document.getElementById("btnLogoutTop");
+      if (btn) {
+        btn.addEventListener("click", (e) => {
+          e.preventDefault();
+          localStorage.removeItem("token");
+          localStorage.removeItem("usuario");
+          window.location.href = "{{ url_for('login_view') }}";
+        });
+      }
+    });
+  </script>
+  <script src="{{ url_for('static', filename='js/pwa.js') }}" defer></script>
+</body>
+</html>

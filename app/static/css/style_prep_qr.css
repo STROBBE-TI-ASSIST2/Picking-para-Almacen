@@ -1,0 +1,284 @@
+/* Reset + base */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #dadada;
+  color: #111;
+  overflow: hidden;
+}
+
+/* Top bar */
+.topbar {
+  height: 76px;
+  background: #6D93A6;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px 0 20px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand-logo {
+  height: 68px;
+}
+
+.brand-title {
+  font-size: 4rem;
+  font-weight: 800;
+  letter-spacing: .0em;
+  opacity: .95;
+  font-style: italic;
+}
+
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.icon-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 9999px;
+  border: none;
+  background: rgba(255, 255, 255, .18);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform .15s ease, background .15s ease;
+}
+
+.icon-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, .28);
+}
+
+.icon-btn img {
+  width: 42px;
+  height: 42px;
+}
+
+/* Layout */
+.page {
+  height: calc(100vh - 76px);
+  display: grid;
+  grid-template-columns: 1fr 200px; /* tabla / filtros */
+  gap: 16px;
+  padding: 14px;
+}
+
+/* ===== Variables de layout (ajústalas a tu UI) ===== */
+:root{
+  --topbar-h: 76px;               /* altura real de la topbar */
+  --page-pad-v: 28px;             /* padding vertical total en .page (14px arriba + 14px abajo) */
+  --bottom-gap: 0px;              /* espacio extra opcional abajo (útil si hay algo flotante) */
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Fallback inicial con 100vh */
+.table-scroll{
+  max-height: calc(100vh - var(--topbar-h) - var(--page-pad-v) - var(--bottom-gap) - var(--safe-bottom));
+}
+
+/* Navegadores modernos: usar altura dinámica real */
+@supports (height: 100dvh){
+  .table-scroll{
+    max-height: calc(100dvh - var(--topbar-h) - var(--page-pad-v) - var(--bottom-gap) - var(--safe-bottom));
+  }
+}
+
+/* Safari móvil/Tablet (viewport "small") si quieres ser extra-robusto */
+@supports (height: 100svh){
+  .table-scroll{
+    max-height: calc(100svh - var(--topbar-h) - var(--page-pad-v) - var(--bottom-gap) - var(--safe-bottom));
+  }
+}
+
+/* ===== Ajustes específicos para TABLET ===== */
+/* iPad/Android tablet PORTRAIT */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait){
+  :root{
+    --bottom-gap: 72px;  /* deja espacio extra abajo en tablet vertical */
+  }
+}
+
+/* iPad/Android tablet LANDSCAPE */
+@media (min-width: 768px) and (max-width: 1366px) and (orientation: landscape){
+  :root{
+    --bottom-gap: 48px;  /* un poco menos en horizontal */
+  }
+}
+
+/* ===== Opcional: asegurar que el contenedor permite crecer/encoger bien ===== */
+.page{
+  min-height: 0; /* clave para que los hijos con overflow funcionen dentro de grid/flex */
+}
+.table-wrap{
+  max-width: 100%;
+  overflow: hidden; /* deja el scroll al hijo .table-scroll */
+}
+.table-scroll{
+  overflow: auto; /* combina X/Y según necesites */
+}
+
+
+.grid {
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: auto;
+  width: 100%;
+}
+
+.grid thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #6D93A6;
+  color: #fff;
+  font-weight: bold;
+  font-size: 0.8rem;
+  padding: 10px 8px;
+  border-right: 1px solid #4b4b4b;
+  white-space: nowrap;
+}
+
+.grid thead th:last-child {
+  border-right: 0;
+}
+
+.grid tbody td {
+  background: #fff;
+  border-right: 1px solid #d7d7d7;
+  border-top: 1px solid #d7d7d7;
+  padding: 4px 5px;
+  font-size: 0.7rem;
+  vertical-align: top;
+  white-space: nowrap;
+  height: 42px;
+  min-height: 42px;
+}
+
+.grid tbody tr:nth-child(odd) td { background: #f9f9f9; }
+.grid tbody tr:hover td { background: #f3f9ff; }
+
+.col-accion { width: 70px; text-align: center; }
+
+.row-go {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(207, 211, 215, 0.8);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  backdrop-filter: blur(2px);
+}
+
+.row-go:hover {
+  background: rgba(159, 182, 197, 0.9);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.row-go img { width: 45px; height: 45px; }
+
+/* Filtros (panel derecho) — semi-transparente */
+.filters {
+  background: rgba(222, 222, 222, 0.8);  /* semi-transparent */
+  border: 3px solid rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, .15);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  max-height: 350px;
+  backdrop-filter: blur(4px); /* efecto glass */
+}
+
+.filters h3 {
+  background: transparent;
+  color: #000;
+  padding: 8px;
+  font-size: 1rem;
+  letter-spacing: .08em;
+  text-align: center;
+}
+
+/* Botones — semi-transparente */
+.pill {
+  background: rgba(115, 174, 177, 0.8);
+  color: #fff;
+  font-weight: bold;
+  letter-spacing: .03em;
+  border: 0;
+  border-radius: 8px;
+  padding: 14px 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease, background .15s ease;
+  font-size: 0.7rem;
+  backdrop-filter: blur(3px);
+}
+
+.pill:hover {
+  background: rgba(115, 174, 177, 0.95);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 14px rgba(0, 0, 0, .2);
+}
+
+.pill-secondary { background: rgba(115, 174, 177, 0.8); }
+
+/* === FORCE hose-illustration to obey bottom offset === */
+.hose-illustration,
+.hose-illustration img {
+  all: unset;                      /* reset everything to avoid hidden overrides */
+}
+
+.hose-illustration {
+  position: fixed !important;      /* must be fixed */
+  right: 30px !important;          /* your preferred right margin */
+  bottom: 0px !important;         /* ⬅️ set the space you want above the edge */
+  width: auto !important;
+  pointer-events: none !important;
+  z-index: 0 !important;           /* below content, above body background */
+}
+
+.hose-illustration img {
+  display: block !important;
+  width: 200px !important;
+  height: auto !important;
+  opacity: 0.15 !important;
+  max-width: 100% !important;
+}
+
+/* If earlier we created a watermark via body::after, disable it: */
+body::after { content: none !important; }
+
+/* Ensure main layers stay above the watermark */
+.topbar, .page, .filters, .table-wrap {
+  position: relative;
+  z-index: 1;
+}
+
+/* Guard against media queries resetting it */
+@media (max-width: 2000px) {
+  .hose-illustration { bottom: 0px !important; right: 30px !important; }
+}
