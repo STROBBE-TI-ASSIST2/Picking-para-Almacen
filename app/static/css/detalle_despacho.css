@@ -60,7 +60,8 @@ html, body{
   flex-direction:column;
   gap:10px;
   overflow: hidden;            /* ✅ evita que el header empuje el scroll */
-  min-height: 0;               /* ✅ CLAVE para que flex + overflow funcione */
+  min-height: 0;
+  /* ✅ CLAVE para que flex + overflow funcione */
 }
 
 /* =========================================================
@@ -136,7 +137,7 @@ html, body{
   background:#fff;
   border:2px solid #000;
   font-weight:800;
-  font-size:13px;
+  font-size:10px;
 
   display:flex;
   align-items:center;
@@ -144,6 +145,25 @@ html, body{
   text-align:center;
 
   padding: 0 6px;         /* antes 0 8px */
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.value1{
+  flex:1;
+  height: 32px;           /* antes 34px */
+  background:#fff;
+  border:2px solid #000;
+  font-weight:800;
+  font-size:8px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+
+  padding: 0 25px;         /* antes 0 8px */
 
   white-space: nowrap;
   overflow: hidden;
@@ -432,3 +452,108 @@ html, body{ overflow:hidden; }   /* ✅ mantener body sin scroll */
     grid-column: auto !important;
   }
 }
+
+/* ===== Alineación izquierda para textos largos ===== */
+#fechaDoc,
+#cliente,
+#obs{
+  justify-content: flex-start;   /* alinea contenido a la izquierda */
+  text-align: left;
+  padding-left: 10px;            /* respiración visual */
+}
+/* ===== Modal selección de usuarios ===== */
+.modal{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.modal.hidden{ display:none; }
+
+.modal-box{
+  width: min(900px, 94vw);
+  height: min(700px, 84vh);
+  background:#fff;
+  border: 2px solid #000;
+  border-radius: 12px;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+.modal-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding: 12px 14px;
+  background:#6D93A6;
+  color:#fff;
+  border-bottom:2px solid #000;
+}
+.modal-head h2{
+  font-size:22px;
+  font-weight:900;
+  margin:0;
+}
+.modal-close{
+  border:2px solid #fff;
+  background:rgba(255,255,255,.18);
+  color:#fff;
+  width:44px;
+  height:44px;
+  border-radius:10px;
+  font-size:22px;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.modal-search{
+  margin: 10px 12px;
+  height: 46px;
+  border:2px solid #000;
+  border-radius:10px;
+  padding: 0 12px;
+  font-size:18px;
+  font-weight:700;
+}
+
+.modal-table-wrap{
+  flex:1;
+  overflow:auto;
+  background:#f1f1f1;
+  border-top:2px solid #000;
+}
+
+.modal-table{
+  width:100%;
+  border-collapse:collapse;
+}
+.modal-table th{
+  position: sticky;
+  top: 0;
+  background:#6D93A6;
+  color:#fff;
+  font-weight:900;
+  padding: 12px 10px;
+  border-bottom:2px solid #000;
+  text-align:left;
+}
+.modal-table td{
+  padding: 14px 10px;
+  border-bottom:1px solid #cfcfcf;
+  font-size:18px;
+  font-weight:700;
+}
+.modal-row{
+  cursor:pointer;
+  background:#fff;
+}
+.modal-row:hover td{
+  background:#e6f2f7;
+}
+
+/* que se note que se puede clickear */
+#registradoPor, #preparadoPor{ cursor:pointer; }
