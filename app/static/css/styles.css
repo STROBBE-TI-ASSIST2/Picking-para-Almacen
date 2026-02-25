@@ -1,0 +1,135 @@
+/* Fondo general con degradado azul suave */
+body {
+  font-family: Verdana, sans-serif;
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  background: linear-gradient(135deg, #1a3f6e, #2E6CA4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Contenedor con fondo translúcido y blur */
+.login-container {
+  width: 350px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px 0 rgba(46, 108, 164, 0.37);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(46, 108, 164, 0.18);
+  padding: 40px 30px 30px 30px;
+  box-sizing: border-box;
+  text-align: center;
+  color: white;
+  position: relative;
+}
+
+.user-icon {
+  width: 100px;
+  height: 100px;
+  background: rgba(46, 108, 164, 0.15);
+  margin: 0 auto 25px auto;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  overflow: hidden; /* para que la imagen no se salga del círculo */
+}
+
+.user-icon img {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+/* Título */
+h2 {
+  margin-bottom: 30px;
+  font-weight: 600;
+  font-size: 24px;
+}
+
+/* Formulario */
+form {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+/* Labels blancos semi-transparentes */
+label {
+  color: rgba(255, 255, 255, 0.75);
+  margin-bottom: 5px;
+  font-weight: 400;
+  font-size: 14px;
+}
+
+/* Inputs con fondo blanco semi-transparente y texto negro */
+input {
+  background: rgba(255, 255, 255, 0.85);
+  border: none;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 25px;
+  color: black;
+  font-size: 15px;
+  outline: none;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+  border: 1.5px solid transparent;
+}
+
+input::placeholder {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+input:focus {
+  border-color: #2E6CA4;
+  box-shadow: 0 0 8px rgba(46, 108, 164, 0.7);
+}
+
+/* Botón con degradado azul gama #2E6CA4 */
+button {
+  background: linear-gradient(135deg, #3c82c4, #2E6CA4);
+  color: white;
+  padding: 12px;
+  font-size: 16px;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  margin-top: 10px;
+}
+
+button:hover {
+  background: linear-gradient(135deg, #2E6CA4, #1f4a72);
+}
+
+/* Logo pequeño debajo */
+.logo-container {
+  margin-top: 30px;
+}
+
+.logo-container img {
+  width: 80px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  border-radius: 10px;
+}
+
+/* Media query para pantallas más grandes */
+@media (min-width: 768px) {
+  .login-container {
+    width: 400px;
+    padding: 50px 40px 40px 40px;
+  }
+
+  input, button {
+    font-size: 16px;
+  }
+}

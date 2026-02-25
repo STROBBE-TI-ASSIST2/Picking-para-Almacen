@@ -1,0 +1,13 @@
+{
+  "name": "STB Picking",
+  "short_name": "STB Picking",
+  "start_url": "/login",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#d9d9d9",
+  "theme_color": "#6D93A6",
+  "icons": [
+    { "src": "/static/pwa/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/static/pwa/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

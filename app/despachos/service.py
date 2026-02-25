@@ -3,7 +3,14 @@ from datetime import datetime, date
 from sqlalchemy import text
 from ..db import engine
 
-def _fecha_a_periodo(fecha: str) -> str:
+from datetime import datetime
+from sqlalchemy import text
+from ..db import engine
+
+# =========================================================
+# Helpers fechas
+# =========================================================
+def _fecha_a_periodo(fecha: str) -> Optional[str]:
     """
     Convierte '2025-11-14' -> '202511' (formato yyyymm) para el SP.
     """
@@ -12,7 +19,27 @@ def _fecha_a_periodo(fecha: str) -> str:
     dt = datetime.strptime(fecha, "%Y-%m-%d")
     return dt.strftime("%Y%m")
 
-#LISTAR DESPACHOS
+
+def _periodos_por_defecto_4_meses() -> Tuple[str, str]:
+    """
+    Devuelve (per_ini, per_fin) para los últimos 4 meses incluyendo el mes actual.
+    """
+    hoy = date.today()
+    per_fin = hoy.strftime("%Y%m")
+
+    mes_ini = hoy.month - 3
+    anio_ini = hoy.year
+    while mes_ini <= 0:
+        mes_ini += 12
+        anio_ini -= 1
+
+    per_ini = f"{anio_ini}{mes_ini:02d}"
+    return per_ini, per_fin
+
+
+# =========================================================
+# LISTAR DESPACHOS (SP)
+# =========================================================
 def listar_despachos_sp(
     codcia: str = "01",
     codsuc: str = "01",
@@ -23,18 +50,13 @@ def listar_despachos_sp(
 ) -> Tuple[List[Dict[str, Any]], int]:
     """
     Llama a pa_Preparacion_Despacho_Local_por_atender usando periodos yyyymm.
-    - fecha_desde / fecha_hasta vienen del frontend como 'YYYY-MM-DD'
-    - Si NO vienen, se usa por defecto un rango de 4 meses (incluyendo el mes actual)
-    - Se convierten a per_ini / per_fin: 'yyyymm'
-    - Paginamos en Python (el SP no tiene page/page_size).
+    Paginamos en Python (el SP no tiene page/page_size).
     """
 
     if fecha_desde or fecha_hasta:
-        # si el front envía fechas, usamos esas
         per_ini = _fecha_a_periodo(fecha_desde) if fecha_desde else None
         per_fin = _fecha_a_periodo(fecha_hasta) if fecha_hasta else None
     else:
-        # si el front NO envía fechas -> últimos 4 meses por defecto
         per_ini, per_fin = _periodos_por_defecto_4_meses()
 
     conn = engine.raw_connection()
@@ -54,7 +76,6 @@ def listar_despachos_sp(
 
         total = len(data)
 
-        # paginación en Python
         start = (page - 1) * page_size
         end = start + page_size
         data_page = data[start:end]
@@ -64,7 +85,10 @@ def listar_despachos_sp(
     finally:
         conn.close()
 
-#LISTAR DETALLES DE DESPACHO
+
+# =========================================================
+# DETALLE
+# =========================================================
 def listar_detalle_tabla(codcia, codsuc, codppc, cododc):
     """Lee el detalle desde la tabla PICKING_DETALLE."""
     with engine.begin() as conn:
@@ -85,6 +109,7 @@ def listar_detalle_tabla(codcia, codsuc, codppc, cododc):
         cols = result.keys()
         rows = result.fetchall()
         return [dict(zip(cols, r)) for r in rows]
+
 
 def listar_detalle_sp(codcia, codsuc, codppc, cododc):
     """Llama al SP detalle y devuelve la lista de dicts."""
@@ -108,23 +133,21 @@ def listar_detalle_sp(codcia, codsuc, codppc, cododc):
     finally:
         conn.close()
 
+
 def generar_detalle_si_no_existe(codcia, codsuc, codppc, cododc):
     """
     1) Revisa si ya existe detalle en PICKING_DETALLE.
     2) Si existe -> solo lo lee y lo devuelve.
     3) Si NO existe -> llama al SP, inserta en PICKING_DETALLE y devuelve lo insertado.
     """
-    # 1) ¿Ya existe?
     existente = listar_detalle_tabla(codcia, codsuc, codppc, cododc)
     if existente:
-        return existente  # no borra nada, solo reutiliza
+        return existente
 
-    # 2) No existe -> llamar SP
     data = listar_detalle_sp(codcia, codsuc, codppc, cododc)
     if not data:
         return []
 
-    # 3) Insertar en tabla PICKING_DETALLE
     insert_sql = text("""
         INSERT INTO dbo.PICKING_DETALLE (
             CIA_CODCIA, SUC_CODSUC, PPC_NUMPPC, ODC_NUMODC,
@@ -144,7 +167,6 @@ def generar_detalle_si_no_existe(codcia, codsuc, codppc, cododc):
         )
     """)
 
-    # normalizar campos clave en cada fila
     for row in data:
         row["CIA_CODCIA"] = row.get("CIA_CODCIA", codcia)
         row["SUC_CODSUC"] = row.get("SUC_CODSUC", codsuc)
@@ -154,14 +176,11 @@ def generar_detalle_si_no_existe(codcia, codsuc, codppc, cododc):
     with engine.begin() as conn:
         conn.execute(insert_sql, data)
 
-    # leer lo que quedó
     return listar_detalle_tabla(codcia, codsuc, codppc, cododc)
 
+
 def terminar_detalle(codcia, codsuc, codppc, cododc):
-    """
-    Borra SOLO el detalle de ese despacho de PICKING_DETALLE.
-    Esto se llama al presionar el botón 'Terminado'.
-    """
+    """Borra SOLO el detalle de ese despacho de PICKING_DETALLE."""
     with engine.begin() as conn:
         conn.execute(text("""
             DELETE FROM dbo.PICKING_DETALLE
@@ -176,16 +195,18 @@ def terminar_detalle(codcia, codsuc, codppc, cododc):
             "ODC_NUMODC": cododc,
         })
 
-#ESCANEADO
+
+# =========================================================
+# ESCANEO (ya lo tenías)
+# =========================================================
 def actualizar_scan(codcia, codsuc, codppc, cododc, codprod, cantidad_sumar):
     """
     Suma cantidad_sumar a Cantidad_Scaneada SIN permitir sobrepicking.
-    Además, actualiza la columna ESTADO del despacho:
-      - '1' si TODOS los ítems de ese PPC/ODC están completos,
-      - '0' si aún hay pendientes.
+    Además, actualiza ESTADO:
+      - '1' si completo,
+      - '0' si pendiente.
     """
     with engine.begin() as conn:
-        # 1) Leer situación actual del ítem
         row = conn.execute(text("""
             SELECT Cantidad_Scaneada, Cantidd_abastecida
             FROM PICKING_DETALLE
@@ -214,11 +235,9 @@ def actualizar_scan(codcia, codsuc, codppc, cododc, codprod, cantidad_sumar):
 
         nuevo_total = actual + cantidad
 
-        # 2) Validar sobrepicking
         if nuevo_total > abastecida:
             return 0, "sobrepicking"
 
-        # 3) Actualizar con el nuevo total de ese ítem
         conn.execute(text("""
             UPDATE PICKING_DETALLE
             SET 
@@ -238,7 +257,6 @@ def actualizar_scan(codcia, codsuc, codppc, cododc, codprod, cantidad_sumar):
             "codprod": codprod,
         })
 
-        # 4) Revisar si todavía hay ítems pendientes en ese despacho
         pendientes = conn.execute(text("""
             SELECT COUNT(*) AS pendientes
             FROM PICKING_DETALLE
@@ -256,7 +274,6 @@ def actualizar_scan(codcia, codsuc, codppc, cododc, codprod, cantidad_sumar):
 
         nuevo_estado = '1' if pendientes == 0 else '0'
 
-        # 5) Actualizar ESTADO para todas las filas de ese despacho
         conn.execute(text("""
             UPDATE PICKING_DETALLE
             SET ESTADO = :estado
@@ -274,32 +291,259 @@ def actualizar_scan(codcia, codsuc, codppc, cododc, codprod, cantidad_sumar):
 
         return 1, "ok"
 
-#RANGO DE FECHAS POR DEFECTO 4MESES
-def _fecha_a_periodo(fecha: str) -> Optional[str]:
+
+# =========================================================
+# ✅ NUEVO: CABECERA desde el MISMO SP de lista
+# (sin cookies de negocio, solo JWT en cookies)
+# =========================================================
+def obtener_cabecera_pedido(codcia, codsuc, codppc, cododc) -> Optional[Dict[str, Any]]:
     """
-    Convierte '2025-11-14' -> '202511' (formato yyyymm) para el SP.
+    Devuelve datos de cabecera usando el mismo SP de lista (pa_Preparacion_Despacho_Local_por_atender).
+    No toca nada del flujo actual, solo agrega.
     """
-    if not fecha:
+    # Traer lote amplio (últimos 4 meses ya lo define el service)
+    data, _ = listar_despachos_sp(
+        codcia=codcia,
+        codsuc=codsuc,
+        fecha_desde=None,
+        fecha_hasta=None,
+        page=1,
+        page_size=5000
+    )
+
+    fila = None
+    for r in data:
+        if str(r.get("ppc_numppc", "")).strip() == str(codppc).strip() and \
+           str(r.get("odc_numodc", "")).strip() == str(cododc).strip():
+            fila = r
+            break
+
+    if not fila:
         return None
-    dt = datetime.strptime(fecha, "%Y-%m-%d")
-    return dt.strftime("%Y%m")
 
-def _periodos_por_defecto_4_meses() -> Tuple[str, str]:
+    # Mapea a lo que tu HTML necesita (ajusta keys si tu SP usa otros nombres)
+    return {
+        # Estos campos existen en tu lista JS:
+        "nroPedido": fila.get("ppc_numppc", codppc),
+        "nroOD": fila.get("odc_numodc", cododc),
+        "fechaDoc": fila.get("ppc_fecdoc", fila.get("pdd_horini", "")),  # fallback
+        "cliente": fila.get("aux_nomaux", ""),
+        "obs": fila.get("ppc_obsped", ""),
+        "direccion": fila.get("dir_Despacho", ""),
+        "estadoTxt": fila.get("c_sit_orddes", ""),
+
+        # Si no tienes aún estos en ERP, quedan "-"
+        "nroOrden": fila.get("ppc_ordcom", ""),  # si existe
+        "registradoPor": "-",                   # lo llenas luego con tu tabla propia
+        "preparadoPor": "-",
+        "tiempoPrep": "-"
+    }
+
+from sqlalchemy import text
+from ..db import engine
+
+def listar_usuarios_preparacion(codcia="01"):
+    with engine.begin() as conn:
+        r = conn.execute(text("""
+            SELECT
+              a.aux_codaux AS CODIGO,
+              LEFT(a.aux_nomaux, 60) AS NOMBRE
+            FROM STROBBE_V13.dbo.V_Auxiliares a
+            WHERE a.cia_codcia = :codcia
+              AND a.aux_indest = '1'
+              AND a.aux_indemp = '1'
+              AND a.aux_codaux IN (
+                  SELECT x.aux_codaux
+                  FROM STROBBE_V13.dbo.TRABAJADOR_USUARIO_TRU x
+                  WHERE x.cia_codcia = :codcia
+                    AND x.tru_predes = 1
+              )
+            ORDER BY LEFT(a.aux_nomaux, 60)
+        """), {"codcia": codcia})
+
+        return [dict(row) for row in r.mappings()]
+
+def _fmt_hhmmss(segundos: int) -> str:
+    if segundos is None:
+        return None
+    h = segundos // 3600
+    m = (segundos % 3600) // 60
+    s = segundos % 60
+    return f"{h:02d}:{m:02d}:{s:02d}"
+
+def _upsert_base_asignacion(conn, codcia, codsuc, codppc, cododc):
+    # asegura que exista la fila en PICKING_ASIGNACION
+    conn.execute(text("""
+        MERGE dbo.PICKING_ASIGNACION AS T
+        USING (SELECT :cia AS CIA_CODCIA, :suc AS SUC_CODSUC, :ppc AS PPC_NUMPPC, :odc AS ODC_NUMODC) AS S
+        ON (T.CIA_CODCIA=S.CIA_CODCIA AND T.SUC_CODSUC=S.SUC_CODSUC AND T.PPC_NUMPPC=S.PPC_NUMPPC AND T.ODC_NUMODC=S.ODC_NUMODC)
+        WHEN NOT MATCHED THEN
+          INSERT (CIA_CODCIA, SUC_CODSUC, PPC_NUMPPC, ODC_NUMODC)
+          VALUES (:cia, :suc, :ppc, :odc);
+    """), {"cia": codcia, "suc": codsuc, "ppc": codppc, "odc": cododc})
+
+def marcar_inicio_preparacion(codcia, codsuc, codppc, cododc):
+    with engine.begin() as conn:
+        conn.execute(text("""
+            MERGE dbo.PICKING_ASIGNACION AS T
+            USING (SELECT :cia CIA_CODCIA, :suc SUC_CODSUC, :ppc PPC_NUMPPC, :odc ODC_NUMODC) S
+            ON (T.CIA_CODCIA=S.CIA_CODCIA AND T.SUC_CODSUC=S.SUC_CODSUC
+                AND T.PPC_NUMPPC=S.PPC_NUMPPC AND T.ODC_NUMODC=S.ODC_NUMODC)
+            WHEN NOT MATCHED THEN
+              INSERT (CIA_CODCIA, SUC_CODSUC, PPC_NUMPPC, ODC_NUMODC, updated_at)
+              VALUES (:cia, :suc, :ppc, :odc, GETDATE());
+        """), {"cia": codcia, "suc": codsuc, "ppc": codppc, "odc": cododc})
+
+        conn.execute(text("""
+            UPDATE dbo.PICKING_ASIGNACION
+            SET inicio_dt = GETDATE(),
+                fin_dt = NULL,
+                tprep_min = NULL,
+                updated_at = GETDATE()
+            WHERE CIA_CODCIA=:cia AND SUC_CODSUC=:suc
+              AND PPC_NUMPPC=:ppc AND ODC_NUMODC=:odc
+        """), {"cia": codcia, "suc": codsuc, "ppc": codppc, "odc": cododc})
+
+        return {"msg": "Inicio OK"}
+
+
+def marcar_fin_preparacion(codcia, codsuc, codppc, cododc):
+    with engine.begin() as conn:
+        row = conn.execute(text("""
+            SELECT inicio_dt
+            FROM dbo.PICKING_ASIGNACION
+            WHERE CIA_CODCIA=:cia AND SUC_CODSUC=:suc
+              AND PPC_NUMPPC=:ppc AND ODC_NUMODC=:odc
+        """), {"cia": codcia, "suc": codsuc, "ppc": codppc, "odc": cododc}).mappings().first()
+
+        if not row or row["inicio_dt"] is None:
+            return {"msg": "No existe inicio", "tprep_min": None}
+
+        conn.execute(text("""
+            UPDATE dbo.PICKING_ASIGNACION
+            SET fin_dt = GETDATE(),
+                tprep_min = CAST(DATEDIFF(SECOND, inicio_dt, GETDATE()) / 60.0 AS DECIMAL(10,2)),
+                updated_at = GETDATE()
+            WHERE CIA_CODCIA=:cia AND SUC_CODSUC=:suc
+              AND PPC_NUMPPC=:ppc AND ODC_NUMODC=:odc
+        """), {
+            "cia": codcia,
+            "suc": codsuc,
+            "ppc": codppc,
+            "odc": cododc
+        })
+
+        mins = conn.execute(text("""
+            SELECT tprep_min
+            FROM dbo.PICKING_ASIGNACION
+            WHERE CIA_CODCIA=:cia AND SUC_CODSUC=:suc
+              AND PPC_NUMPPC=:ppc AND ODC_NUMODC=:odc
+        """), {"cia": codcia, "suc": codsuc, "ppc": codppc, "odc": cododc}).scalar()
+
+        return {"msg": "Fin OK", "tprep_min": mins}
+
+
+
+def obtener_nombre_usuario_erp(codcia, codaux):
     """
-    Devuelve (per_ini, per_fin) para los últimos 4 meses
-    incluyendo el mes actual.
-    Ej: hoy = 2025-11-19 -> per_ini='202508', per_fin='202511'
+    Devuelve el nombre del usuario desde el ERP (STROBBE_V13)
+    usando aux_codaux.
     """
-    hoy = date.today()
-    # periodo final: mes actual
-    per_fin = hoy.strftime("%Y%m")
+    if not codaux:
+        return None
 
-    # mes inicial: 3 meses atrás (4 meses en total contando el actual)
-    mes_ini = hoy.month - 3
-    anio_ini = hoy.year
-    while mes_ini <= 0:
-        mes_ini += 12
-        anio_ini -= 1
+    with engine.begin() as conn:
+        r = conn.execute(text("""
+            SELECT TOP 1 LEFT(a.aux_nomaux, 60) AS NOMBRE
+            FROM STROBBE_V13.dbo.V_Auxiliares a
+            WHERE a.cia_codcia = :codcia
+              AND a.aux_codaux = :codaux
+        """), {
+            "codcia": codcia,
+            "codaux": codaux
+        }).mappings().first()
 
-    per_ini = f"{anio_ini}{mes_ini:02d}"
-    return per_ini, per_fin
+        return r["NOMBRE"] if r else None
+
+def asignar_usuarios_preparacion(
+    codcia,
+    codsuc,
+    codppc,
+    cododc,
+    registrado_id=None,
+    preparado_id=None
+):
+    """
+    Guarda REGISTRADO POR y/o PREPARADO POR
+    en la tabla PICKING_ASIGNACION.
+    """
+
+    registrado_nom = obtener_nombre_usuario_erp(codcia, registrado_id)
+    preparado_nom  = obtener_nombre_usuario_erp(codcia, preparado_id)
+
+    with engine.begin() as conn:
+        conn.execute(text("""
+            MERGE dbo.PICKING_ASIGNACION AS T
+            USING (
+                SELECT
+                    :cia  AS CIA_CODCIA,
+                    :suc  AS SUC_CODSUC,
+                    :ppc  AS PPC_NUMPPC,
+                    :odc  AS ODC_NUMODC
+            ) AS S
+            ON (
+                T.CIA_CODCIA = S.CIA_CODCIA AND
+                T.SUC_CODSUC = S.SUC_CODSUC AND
+                T.PPC_NUMPPC = S.PPC_NUMPPC AND
+                T.ODC_NUMODC = S.ODC_NUMODC
+            )
+            WHEN MATCHED THEN
+                UPDATE SET
+                    registrado_cod = COALESCE(:reg_cod, T.registrado_cod),
+                    registrado_nom = COALESCE(:reg_nom, T.registrado_nom),
+                    preparado_cod  = COALESCE(:pre_cod, T.preparado_cod),
+                    preparado_nom  = COALESCE(:pre_nom, T.preparado_nom),
+                    updated_at     = GETDATE()
+            WHEN NOT MATCHED THEN
+                INSERT (
+                    CIA_CODCIA, SUC_CODSUC, PPC_NUMPPC, ODC_NUMODC,
+                    registrado_cod, registrado_nom,
+                    preparado_cod, preparado_nom,
+                    updated_at
+                )
+                VALUES (
+                    :cia, :suc, :ppc, :odc,
+                    :reg_cod, :reg_nom,
+                    :pre_cod, :pre_nom,
+                    GETDATE()
+                );
+        """), {
+            "cia": codcia,
+            "suc": codsuc,
+            "ppc": codppc,
+            "odc": cododc,
+            "reg_cod": registrado_id,
+            "reg_nom": registrado_nom,
+            "pre_cod": preparado_id,
+            "pre_nom": preparado_nom
+        })
+
+        # Devolver lo que quedó guardado
+        row = conn.execute(text("""
+            SELECT registrado_nom, preparado_nom
+            FROM dbo.PICKING_ASIGNACION
+            WHERE CIA_CODCIA=:cia
+              AND SUC_CODSUC=:suc
+              AND PPC_NUMPPC=:ppc
+              AND ODC_NUMODC=:odc
+        """), {
+            "cia": codcia,
+            "suc": codsuc,
+            "ppc": codppc,
+            "odc": cododc
+        }).mappings().first()
+
+    return {
+        "registradoPor": row["registrado_nom"] if row else None,
+        "preparadoPor": row["preparado_nom"] if row else None
+    }

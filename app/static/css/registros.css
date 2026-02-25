@@ -1,0 +1,188 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+/* Estilo general */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'Roboto', sans-serif;
+  background: linear-gradient(135deg, #1a3f6e, #2E6CA4);
+  color: white;
+  overflow-y: auto;
+  box-sizing: border-box;
+  font-size: 26px;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px;
+  min-height: 100vh;
+}
+
+/* Contenedor principal tipo tarjeta */
+.container {
+  width: 100%;
+  max-width: 95vw;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 18px;
+  padding: 30px 24px;
+  box-shadow: 0 10px 30px rgba(46, 108, 164, 0.4);
+  box-sizing: border-box;
+}
+
+/* Botón volver */
+#btn-back {
+  margin-bottom: 20px;
+  padding: 8px 16px;
+  font-size: 32px;
+  border-radius: 8px;
+  border: none;
+  background-color: #2E6CA4;
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(46, 108, 164, 0.6);
+  transition: background-color 0.3s ease;
+  user-select: none;
+}
+
+#btn-back:hover {
+  background-color: #1f4a72;
+}
+
+/* Título */
+h2 {
+  text-align: center;
+  color: white;
+  margin-bottom: 30px;
+  font-weight: 600;
+  font-size: 40px;
+}
+
+/* Contenedor de tarjetas */
+.registros-container {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* Tarjetas */
+.registro-card {
+  background: rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 24px 20px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  color: white;
+  font-size: 30px;
+  transition: transform 0.3s ease;
+}
+
+.registro-card:hover {
+  transform: scale(1.01);
+}
+
+.registro-card p {
+  margin: 12px 0;
+  line-height: 1.6;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+}
+
+.registro-card strong {
+  color: rgba(255, 255, 255, 0.98);
+  font-weight: 600;
+}
+
+/* Cabecera */
+.registro-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* Botones alineados horizontalmente */
+.acciones-crud {
+  display: flex;
+  gap: 10px;
+}
+
+/* Botones CRUD */
+.btn-CRUD {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 10px;
+  border-radius: 12px;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+  text-decoration: none;
+  color: white;
+}
+
+.btn-CRUD:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .container {
+    padding: 26px 20px;
+  }
+
+  h2 {
+    font-size: 22px;
+  }
+
+  #btn-back {
+    font-size: 13px;
+    padding: 7px 14px;
+  }
+
+  .registro-card {
+    font-size: 25px;
+    padding: 22px 18px;
+  }
+
+  .btn-CRUD {
+    font-size: 24px;
+    padding: 8px;
+  }
+
+  .acciones-crud {
+    gap: 6px;
+  }
+}
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+/* Posicionamiento absoluto arriba a la derecha */
+#btn-refresh {
+  position: absolute;
+  top: 24px;
+  right: 28px;
+  padding: 8px 16px;
+  font-size: 32px;
+  border-radius: 8px;
+  border: none;
+  background-color: #C4C4C4; /* mismo color que el botón 'Volver' */
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(46, 108, 164, 0.6);
+  transition: background-color 0.3s ease;
+  user-select: none;
+  z-index: 10;
+}
+
+#btn-refresh:hover {
+  background-color: #1f4a72; /* igual que el hover del botón 'Volver' */
+}

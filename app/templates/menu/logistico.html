@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+  <title>Menú Logístico</title>
+
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="theme-color" content="#6D93A6">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style_logistico.css') }}">
+</head>
+
+<body>
+
+  <header class="top-bar">
+    <div class="logo">
+      <img src="{{ url_for('static', filename='imagenes/stb_logo.png') }}" alt="STROBBE" />
+    </div>
+
+    <h1>MENÚ LOGÍSTICO</h1>
+
+    <div class="actions">
+      <!-- Home -->
+      <a class="icon-btn" href="{{ url_for('menu_view') }}" title="Inicio">
+        <img src="{{ url_for('static', filename='imagenes/home_app.png') }}" alt="Inicio">
+      </a>
+
+      <!-- Logout -->
+      <button type="button" class="icon-btn" id="btnCambiarUsuario" title="Cambiar usuario">
+        <img src="{{ url_for('static', filename='imagenes/exit.png') }}" alt="Salir">
+      </button>
+    </div>
+  </header>
+
+  <main class="layout">
+
+    <!-- PANEL IZQUIERDO -->
+    <section class="left-panel">
+
+      <a class="big-option" href="{{ url_for('despachos_view') }}">
+        PREPARACIÓN DE DESPACHO LOCAL<br>(QR PICKING)
+      </a>
+
+      <a class="big-option disabled" href="javascript:void(0)">
+        PREPARACIÓN DE DESPACHO LOCAL<br>(PICKING)
+      </a>
+
+      <a class="big-option disabled" href="javascript:void(0)">
+        REPORTES
+      </a>
+
+    </section>
+
+    <!-- PANEL DERECHO -->
+    <section class="right-panel">
+      <div class="vertical-tag">
+        <span>Logístico</span>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="{{ url_for('static', filename='js/menu_front.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/pwa.js') }}" defer></script>
+</body>
+</html>

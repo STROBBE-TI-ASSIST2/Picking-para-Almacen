@@ -1,0 +1,192 @@
+/* Reset */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* evita desplazamiento vertical */
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #fff;
+}
+
+/* Layout base */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh; /* dynamic viewport height */
+}
+
+/* Barra superior */
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #6D93A6;
+  color: #fff;
+  padding: 0.5rem 1.5rem;
+  height: 70px;
+  flex-shrink: 0;
+}
+
+.top-bar .logo { display: flex; align-items: center; gap: 10px; }
+.top-bar .logo img { height: 90px; }
+
+.top-bar h1 {
+  font-size: 2rem;
+  text-align: center;
+  flex-grow: 1;
+  letter-spacing: 0.5px;
+  font-weight: 800;
+  margin-left: -140px; /* mueve a la izquierda */
+}
+
+.top-bar .actions { display: flex; gap: 12px; }
+.top-bar .actions img { height: 40px; cursor: pointer; }
+
+/* Contenido principal en 2 columnas */
+.main-content {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  /* Alto total visible menos topbar (70px) y footer (64px) */
+  height: calc(100dvh - 70px - 64px);
+}
+
+/* Columna izquierda con fondo gris */
+.menu-column {
+  flex: 1;
+  background: #d9d9d9;
+  padding: 1.25rem 2rem 5rem;
+  position: relative;
+  min-height: 0; /* importante para que flex hijos estiren correctamente */
+}
+
+/* Botones alineados en grid */
+.menu-section {
+  display: grid;
+  grid-template-columns: repeat(3, 240px);
+  gap: 5rem;
+  justify-content: start;
+  align-content: start;
+  margin-top: 3rem;
+}
+
+/* ====== Texto fuera, imagen dentro ====== */
+.menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: #111;
+}
+
+/* Recuadro con la imagen */
+.menu-img {
+  background: #fff;
+  border: 2px solid #ccc;
+  border-radius: 14px;
+  width: 220px;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.18);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.menu-item:hover .menu-img {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 24px rgba(0,0,0,0.22);
+}
+
+/* Imagen dentro */
+.menu-img img {
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
+}
+
+/* Título fuera */
+.menu-item h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+/* ====== Columna derecha: imagen diagonal que llega hasta abajo ====== */
+.image-section {
+  flex: 1;                   /* ocupa todo el espacio restante */
+  background: #d9d9d9;
+  position: relative;        /* padre de la img absoluta */
+  overflow: hidden;          /* evita desbordes */
+  min-height: 0;             /* para que el hijo pueda estirar */
+}
+
+.image-section img {
+  position: absolute;
+  inset: 0;                  /* top:0; right:0; bottom:0; left:0 */
+  width: 100%;
+  height: 100%;              /* llena TODO el alto del contenedor */
+  object-fit: cover;         /* cubre sin deformar (recorta si es necesario) */
+  clip-path: polygon(11% 0, 100% 0, 100% 100%, -2% 100%); /* diagonal */
+}
+
+/* Footer */
+.footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 64px;
+  background: #b3b3b3;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.8rem;
+  letter-spacing: 1px;
+  z-index: 10;
+  margin-left: -50px; /* mueve a la izquierda */
+}
+
+.footer p { pointer-events: none; }
+
+/* Responsivo */
+@media (max-width: 1200px) {
+  .menu-section { grid-template-columns: repeat(3, 210px); gap: 1.5rem; }
+  .menu-img { width: 210px; height: 170px; }
+  .menu-img img { width: 120px; height: 120px; }
+}
+
+@media (max-width: 992px) {
+  .main-content { flex-direction: column; }
+
+  /* Mantén la imagen pegada a los bordes también en este breakpoint */
+  .image-section {
+    height: auto;            /* deja que flex calcule el alto según calc() de arriba */
+    min-height: 0;
+  }
+  .image-section img {
+    clip-path: none;         /* opcional: sin diagonal para pantallas medianas */
+  }
+
+  .menu-section { grid-template-columns: repeat(2, minmax(180px, 1fr)); }
+}
+
+@media (max-width: 600px) {
+  .menu-section { grid-template-columns: 1fr; }
+  .menu-img { width: 100%; max-width: 360px; margin: 0 auto; }
+
+  /* En móviles, seguimos ocupando todo el alto disponible */
+  .image-section {
+    height: auto;
+  }
+  .image-section img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    clip-path: none; /* opcional: quita diagonal para que no se note corte */
+  }
+}
