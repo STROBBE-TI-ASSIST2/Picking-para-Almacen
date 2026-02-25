@@ -248,10 +248,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const obsFinal = [c.direccion, c.obs].filter(Boolean).join(" — ");
     setField("obs", obsFinal || c.obs || "-");
 
+
     const yaInicio = !!c.inicio_dt && String(c.inicio_dt).trim() !== "";
     const yaFin    = !!c.fin_dt && String(c.fin_dt).trim() !== "";
 
-    // estado iniciado (en memoria)
     if (yaFin) setIniciado(false);
     else if (yaInicio) setIniciado(true);
     else setIniciado(false);
@@ -261,7 +261,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setInicioEnabled(tienePreparado && !yaInicio && !yaFin);
 
     // FIN se decide por tabla
-    setFinEnabled(false);
+    setFinEnabled(true);
   }
 
   // =========================
@@ -283,7 +283,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // ✅ FIN solo si: ya está iniciado + hay filas + todo completo
-    setFinEnabled(iniciado && total > 0 && completos);
+    //setFinEnabled(iniciado && total > 0 && completos);
+    setFinEnabled(iniciado && total > 0);
   }
 function pintarTabla(detalle) {
   tablaBody.innerHTML = "";
@@ -631,11 +632,37 @@ function pintarTabla(detalle) {
   // =========================
   // ✅ Ya NO parseamos en el frontend (evita que "producto" salga como fecha por cambios de formato)
   // Solo validamos que no venga vacío y enviamos el RAW al backend.
-  function parsearQR(raw) {
-    const t = (raw || "").trim();
-    if (!t) return { ok: false, error: "QR vacío" };
-    return { ok: true, data: { raw: t } };
+function parsearQR(raw) {
+  const partes = (raw || "").trim().split("|").map(p => (p || "").trim()).filter(p => p !== "");
+
+  if (partes.length === 9) {
+    const ppcQr = partes[1];
+    const codprod = (partes[3] || "").replace(/\./g, "").trim();
+    const cantidad = parseFloat((partes[4] || "").replace(",", "."));
+    const etiqueta = (partes[7] || "").trim();
+
+    if (!codprod) return { ok:false, error:"Código de producto vacío" };
+    if (Number.isNaN(cantidad)) return { ok:false, error:"Cantidad inválida" };
+    if (!etiqueta) return { ok:false, error:"Etiqueta vacía" };
+
+    return { ok:true, data:{ codprod, cantidad, etiqueta, ppcQr } };
   }
+
+  if (partes.length === 8) {
+    const codprod = (partes[1] || "").replace(/\./g, "").trim();
+    const cantidad = parseFloat((partes[2] || "").replace(",", "."));
+    const etiqueta = (partes[4] || "").trim();
+    const ppcQr = null;
+
+    if (!codprod) return { ok:false, error:"Código de producto vacío" };
+    if (Number.isNaN(cantidad)) return { ok:false, error:"Cantidad inválida" };
+    if (!etiqueta) return { ok:false, error:"Etiqueta vacía" };
+
+    return { ok:true, data:{ codprod, cantidad, etiqueta, ppcQr } };
+  }
+
+  return { ok:false, error:`QR inválido (campos=${partes.length})` };
+}
 
   // =========================
   // Enviar Scan (NUEVO)

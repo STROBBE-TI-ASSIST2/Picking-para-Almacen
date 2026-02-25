@@ -424,7 +424,6 @@ def obtener_cabecera_pedido(
         "tprep_min":     asi.get("tprep_min"),
         "tiempoPrep":    (f'{asi.get("tprep_min")} min' if asi.get("tprep_min") is not None else "-")
     })
-
     return cab
 
 from sqlalchemy import text
@@ -512,7 +511,7 @@ def marcar_inicio_preparacion(codcia, codsuc, codppc, cododc):
 
 
 
-def marcar_fin_preparacion(codcia, codsuc, codppc, cododc):
+'''def marcar_fin_preparacion(codcia, codsuc, codppc, cododc):
     with engine.begin() as conn:
 
         # ✅ 1) validar pendientes
@@ -556,8 +555,51 @@ def marcar_fin_preparacion(codcia, codsuc, codppc, cododc):
         """), {"cia": codcia, "suc": codsuc, "ppc": codppc, "odc": cododc}).scalar()
 
         return {"ok": True, "msg": "Fin OK", "tprep_min": mins}
+'''
+def marcar_fin_preparacion(codcia, codsuc, codppc, cododc):
+    with engine.begin() as conn:
 
+        pendientes = conn.execute(text("""
+            SELECT COUNT(*) AS pendientes
+            FROM dbo.PICKING_DETALLE
+            WHERE CIA_CODCIA=:cia AND SUC_CODSUC=:suc
+              AND PPC_NUMPPC=:ppc AND ODC_NUMODC=:odc
+              AND ISNULL(Cantidad_Scaneada,0) <> ISNULL(Cantidd_abastecida,0)
+        """), {"cia": codcia, "suc": codsuc, "ppc": codppc, "odc": cododc}).scalar()
 
+        if pendientes and int(pendientes) > 0:
+            return {"ok": False, "msg": f"No se puede finalizar: faltan {pendientes} ítems por completar."}
+
+        row = conn.execute(text("""
+            SELECT inicio_dt
+            FROM dbo.PICKING_ASIGNACION
+            WHERE CIA_CODCIA=:cia AND SUC_CODSUC=:suc
+              AND PPC_NUMPPC=:ppc AND ODC_NUMODC=:odc
+        """), {"cia": codcia, "suc": codsuc, "ppc": codppc, "odc": cododc}).mappings().first()
+
+        if not row or row["inicio_dt"] is None:
+            return {"ok": False, "msg": "No existe inicio"}
+
+        res = conn.execute(text("""
+            UPDATE dbo.PICKING_ASIGNACION
+            SET fin_dt = GETDATE(),
+                tprep_min = CAST(DATEDIFF(SECOND, inicio_dt, GETDATE()) / 60.0 AS DECIMAL(10,2)),
+                updated_at = GETDATE()
+            WHERE CIA_CODCIA=:cia AND SUC_CODSUC=:suc
+              AND PPC_NUMPPC=:ppc AND ODC_NUMODC=:odc
+        """), {"cia": codcia, "suc": codsuc, "ppc": codppc, "odc": cododc})
+
+        if res.rowcount == 0:
+            return {"ok": False, "msg": "FIN no actualizó nada (rowcount=0). Revisa CIA/SUC/PPC/ODC."}
+
+        cab = conn.execute(text("""
+            SELECT fin_dt, tprep_min
+            FROM dbo.PICKING_ASIGNACION
+            WHERE CIA_CODCIA=:cia AND SUC_CODSUC=:suc
+              AND PPC_NUMPPC=:ppc AND ODC_NUMODC=:odc
+        """), {"cia": codcia, "suc": codsuc, "ppc": codppc, "odc": cododc}).mappings().first()
+
+        return {"ok": True, "msg": "Fin OK", "fin_dt": cab["fin_dt"], "tprep_min": cab["tprep_min"]}
 
 def _fmt_dt_lima(dt) -> Optional[str]:
     """Convierte datetime -> 'YYYY-MM-DD HH:MM:SS' (hora tal cual viene de SQL Server)."""
