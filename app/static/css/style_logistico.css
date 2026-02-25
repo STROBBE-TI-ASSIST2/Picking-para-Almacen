@@ -28,7 +28,7 @@ html, body {
 }
 
 .top-bar .logo { display: flex; align-items: center; gap: 10px; }
-.top-bar .logo img { height: 60px; width: auto; display: block; }
+.top-bar .logo img { height: 90px; width: auto; display: block; }
 
 .top-bar h1 {
   font-size: 2rem;

@@ -6,10 +6,27 @@ from ..db import engine
 from datetime import datetime
 from sqlalchemy import text
 from ..db import engine
-
+from datetime import datetime
+from typing import Optional
+from sqlalchemy import text
+from ..db import engine
 # =========================================================
 # Helpers fechas
 # =========================================================
+from sqlalchemy import text
+from ..db import engine
+
+def tiene_inicio(codcia, codsuc, codppc, cododc) -> bool:
+    with engine.begin() as conn:
+        inicio = conn.execute(text("""
+            SELECT inicio_dt
+            FROM dbo.PICKING_ASIGNACION
+            WHERE CIA_CODCIA=:cia AND SUC_CODSUC=:suc
+              AND PPC_NUMPPC=:ppc AND ODC_NUMODC=:odc
+        """), {"cia": codcia, "suc": codsuc, "ppc": codppc, "odc": cododc}).scalar()
+
+        return inicio is not None
+
 def _fecha_a_periodo(fecha: str) -> Optional[str]:
     """
     Convierte '2025-11-14' -> '202511' (formato yyyymm) para el SP.
@@ -90,7 +107,15 @@ def listar_despachos_sp(
 # DETALLE
 # =========================================================
 def listar_detalle_tabla(codcia, codsuc, codppc, cododc):
-    """Lee el detalle desde la tabla PICKING_DETALLE."""
+    """
+    Lee el detalle desde:
+    - PICKING_HISTORICO si ya está finalizado (fin_dt NOT NULL),
+    - caso contrario desde PICKING_DETALLE.
+    """
+    if esta_finalizado(codcia, codsuc, codppc, cododc):
+        return listar_detalle_historico(codcia, codsuc, codppc, cododc)
+
+    # Activo: tabla detalle
     with engine.begin() as conn:
         result = conn.execute(text("""
             SELECT *
@@ -99,7 +124,7 @@ def listar_detalle_tabla(codcia, codsuc, codppc, cododc):
               AND SUC_CODSUC = :SUC_CODSUC
               AND PPC_NUMPPC = :PPC_NUMPPC
               AND ODC_NUMODC = :ODC_NUMODC
-            ORDER BY ITEM
+            ORDER BY Ubicacion ASC
         """), {
             "CIA_CODCIA": codcia,
             "SUC_CODSUC": codsuc,
@@ -109,6 +134,7 @@ def listar_detalle_tabla(codcia, codsuc, codppc, cododc):
         cols = result.keys()
         rows = result.fetchall()
         return [dict(zip(cols, r)) for r in rows]
+
 
 
 def listar_detalle_sp(codcia, codsuc, codppc, cododc):
@@ -136,10 +162,15 @@ def listar_detalle_sp(codcia, codsuc, codppc, cododc):
 
 def generar_detalle_si_no_existe(codcia, codsuc, codppc, cododc):
     """
-    1) Revisa si ya existe detalle en PICKING_DETALLE.
-    2) Si existe -> solo lo lee y lo devuelve.
-    3) Si NO existe -> llama al SP, inserta en PICKING_DETALLE y devuelve lo insertado.
+    Si ya finalizó: retornar histórico y NO volver a generar detalle.
+    Si está activo:
+      - si existe detalle -> devolverlo
+      - si no existe -> generar desde SP e insertar
     """
+    # ✅ Si ya está finalizado, siempre servir histórico
+    if esta_finalizado(codcia, codsuc, codppc, cododc):
+        return listar_detalle_historico(codcia, codsuc, codppc, cododc)
+
     existente = listar_detalle_tabla(codcia, codsuc, codppc, cododc)
     if existente:
         return existente
@@ -155,7 +186,7 @@ def generar_detalle_si_no_existe(codcia, codsuc, codppc, cododc):
             Descripcion_pedido, CodigoParte, UM,
             UE, Indica_Cierre, Cantidad_a_Despachar,
             Cantidd_abastecida, Caja, Peso_Neto,
-            Cantidad_Scaneada, Diferencia
+            Cantidad_Scaneada, Diferencia,Ubicacion
         )
         VALUES (
             :CIA_CODCIA, :SUC_CODSUC, :PPC_NUMPPC, :ODC_NUMODC,
@@ -163,7 +194,7 @@ def generar_detalle_si_no_existe(codcia, codsuc, codppc, cododc):
             :Descripcion_pedido, :CodigoParte, :UM,
             :UE, :Indica_Cierre, :Cantidad_a_Despachar,
             :Cantidd_abastecida, :Caja, :Peso_Neto,
-            :Cantidad_Scaneada, :Diferencia
+            :Cantidad_Scaneada, :Diferencia,:Ubicacion
         )
     """)
 
@@ -172,6 +203,7 @@ def generar_detalle_si_no_existe(codcia, codsuc, codppc, cododc):
         row["SUC_CODSUC"] = row.get("SUC_CODSUC", codsuc)
         row["PPC_NUMPPC"] = row.get("PPC_NUMPPC", codppc)
         row["ODC_NUMODC"] = row.get("ODC_NUMODC", cododc)
+
 
     with engine.begin() as conn:
         conn.execute(insert_sql, data)
@@ -292,23 +324,15 @@ def actualizar_scan(codcia, codsuc, codppc, cododc, codprod, cantidad_sumar):
         return 1, "ok"
 
 
-# =========================================================
-# ✅ NUEVO: CABECERA desde el MISMO SP de lista
-# (sin cookies de negocio, solo JWT en cookies)
-# =========================================================
-def obtener_cabecera_pedido(codcia, codsuc, codppc, cododc) -> Optional[Dict[str, Any]]:
-    """
-    Devuelve datos de cabecera usando el mismo SP de lista (pa_Preparacion_Despacho_Local_por_atender).
-    No toca nada del flujo actual, solo agrega.
-    """
-    # Traer lote amplio (últimos 4 meses ya lo define el service)
+def obtener_cabecera_pedido(
+    codcia, codsuc, codppc, cododc,
+    usuario_id: Optional[str] = None   # 👈 nuevo
+) -> Optional[Dict[str, Any]]:
+
     data, _ = listar_despachos_sp(
-        codcia=codcia,
-        codsuc=codsuc,
-        fecha_desde=None,
-        fecha_hasta=None,
-        page=1,
-        page_size=5000
+        codcia=codcia, codsuc=codsuc,
+        fecha_desde=None, fecha_hasta=None,
+        page=1, page_size=5000
     )
 
     fila = None
@@ -321,23 +345,87 @@ def obtener_cabecera_pedido(codcia, codsuc, codppc, cododc) -> Optional[Dict[str
     if not fila:
         return None
 
-    # Mapea a lo que tu HTML necesita (ajusta keys si tu SP usa otros nombres)
-    return {
-        # Estos campos existen en tu lista JS:
+    cab = {
         "nroPedido": fila.get("ppc_numppc", codppc),
         "nroOD": fila.get("odc_numodc", cododc),
-        "fechaDoc": fila.get("ppc_fecdoc", fila.get("pdd_horini", "")),  # fallback
+
+        # ✅ tu fecha (fallbacks por si cambia el SP)
+        "fechaDoc": (
+            fila.get("ppc_fecdoc")
+            or fila.get("PPC_FECDOC")
+            or fila.get("FPedido")
+            or fila.get("fpedido")
+            or fila.get("pdd_horini")
+            or fila.get("PDD_HORINI")
+            or ""
+        ),
+
         "cliente": fila.get("aux_nomaux", ""),
         "obs": fila.get("ppc_obsped", ""),
         "direccion": fila.get("dir_Despacho", ""),
         "estadoTxt": fila.get("c_sit_orddes", ""),
-
-        # Si no tienes aún estos en ERP, quedan "-"
-        "nroOrden": fila.get("ppc_ordcom", ""),  # si existe
-        "registradoPor": "-",                   # lo llenas luego con tu tabla propia
-        "preparadoPor": "-",
-        "tiempoPrep": "-"
+        "nroOrden": fila.get("ppc_ordcom", "")
     }
+
+    # ✅ traer asignación real de tu tabla
+    asi = obtener_asignacion(codcia, codsuc, codppc, cododc)
+
+    # =========================================================
+    # ✅ AUTO-LLENAR REGISTRADO POR (usuario logueado)
+    # =========================================================
+    registrado_cod = (asi.get("registrado_cod") or "").strip()
+
+    # normalizar usuario_id (por si viene dict desde JWT)
+    uid = usuario_id
+    if isinstance(uid, dict):
+        # ajusta la key según tu login (id, cod, username, etc.)
+        uid = uid.get("id") or uid.get("cod") or uid.get("usuario") or uid.get("aux_codaux")
+
+    uid = (str(uid).strip() if uid is not None else "")
+
+    if (not registrado_cod) and uid:
+        reg_nom = obtener_nombre_usuario_erp(codcia, uid) or uid
+
+        with engine.begin() as conn:
+            # 1) asegura fila
+            conn.execute(text("""
+                MERGE dbo.PICKING_ASIGNACION AS T
+                USING (SELECT :cia CIA_CODCIA, :suc SUC_CODSUC, :ppc PPC_NUMPPC, :odc ODC_NUMODC) S
+                ON (T.CIA_CODCIA=S.CIA_CODCIA AND T.SUC_CODSUC=S.SUC_CODSUC
+                    AND T.PPC_NUMPPC=S.PPC_NUMPPC AND T.ODC_NUMODC=S.ODC_NUMODC)
+                WHEN NOT MATCHED THEN
+                  INSERT (CIA_CODCIA, SUC_CODSUC, PPC_NUMPPC, ODC_NUMODC, updated_at)
+                  VALUES (:cia, :suc, :ppc, :odc, GETDATE());
+            """), {"cia": codcia, "suc": codsuc, "ppc": codppc, "odc": cododc})
+
+            # 2) setear solo si está vacío
+            conn.execute(text("""
+                UPDATE dbo.PICKING_ASIGNACION
+                SET registrado_cod = :reg_cod,
+                    registrado_nom = :reg_nom,
+                    updated_at = GETDATE()
+                WHERE CIA_CODCIA=:cia AND SUC_CODSUC=:suc
+                  AND PPC_NUMPPC=:ppc AND ODC_NUMODC=:odc
+                  AND (registrado_cod IS NULL OR LTRIM(RTRIM(registrado_cod)) = '')
+            """), {
+                "cia": codcia, "suc": codsuc, "ppc": codppc, "odc": cododc,
+                "reg_cod": uid, "reg_nom": reg_nom
+            })
+
+        # refrescar
+        asi = obtener_asignacion(codcia, codsuc, codppc, cododc)
+
+    cab.update({
+        "registradoPor": asi.get("registrado_nom") or "-",
+        "preparadoPor":  asi.get("preparado_nom")  or "-",
+        "preparado_cod": asi.get("preparado_cod"),
+        "inicio_dt":     asi.get("inicio_dt"),
+        "fin_dt":        asi.get("fin_dt"),
+        "tprep_min":     asi.get("tprep_min"),
+        "tiempoPrep":    (f'{asi.get("tprep_min")} min' if asi.get("tprep_min") is not None else "-")
+    })
+
+    return cab
 
 from sqlalchemy import text
 from ..db import engine
@@ -382,8 +470,10 @@ def _upsert_base_asignacion(conn, codcia, codsuc, codppc, cododc):
           VALUES (:cia, :suc, :ppc, :odc);
     """), {"cia": codcia, "suc": codsuc, "ppc": codppc, "odc": cododc})
 
+
 def marcar_inicio_preparacion(codcia, codsuc, codppc, cododc):
     with engine.begin() as conn:
+        # 1) asegurar fila base (como ya haces)
         conn.execute(text("""
             MERGE dbo.PICKING_ASIGNACION AS T
             USING (SELECT :cia CIA_CODCIA, :suc SUC_CODSUC, :ppc PPC_NUMPPC, :odc ODC_NUMODC) S
@@ -394,6 +484,19 @@ def marcar_inicio_preparacion(codcia, codsuc, codppc, cododc):
               VALUES (:cia, :suc, :ppc, :odc, GETDATE());
         """), {"cia": codcia, "suc": codsuc, "ppc": codppc, "odc": cododc})
 
+        # 2) ✅ VALIDAR preparado_cod
+        preparado_cod = conn.execute(text("""
+            SELECT NULLIF(LTRIM(RTRIM(preparado_cod)), '') AS preparado_cod
+            FROM dbo.PICKING_ASIGNACION
+            WHERE CIA_CODCIA=:cia AND SUC_CODSUC=:suc
+              AND PPC_NUMPPC=:ppc AND ODC_NUMODC=:odc
+        """), {"cia": codcia, "suc": codsuc, "ppc": codppc, "odc": cododc}).scalar()
+
+        if not preparado_cod:
+            # 👇 importante: NO actualiza inicio_dt
+            return {"ok": False, "msg": "Debe seleccionar PREPARADO POR antes de iniciar."}
+
+        # 3) actualizar inicio (solo si pasó validación)
         conn.execute(text("""
             UPDATE dbo.PICKING_ASIGNACION
             SET inicio_dt = GETDATE(),
@@ -404,11 +507,27 @@ def marcar_inicio_preparacion(codcia, codsuc, codppc, cododc):
               AND PPC_NUMPPC=:ppc AND ODC_NUMODC=:odc
         """), {"cia": codcia, "suc": codsuc, "ppc": codppc, "odc": cododc})
 
-        return {"msg": "Inicio OK"}
+        return {"ok": True, "msg": "Inicio OK"}
+
+
 
 
 def marcar_fin_preparacion(codcia, codsuc, codppc, cododc):
     with engine.begin() as conn:
+
+        # ✅ 1) validar pendientes
+        pendientes = conn.execute(text("""
+            SELECT COUNT(*) AS pendientes
+            FROM dbo.PICKING_DETALLE
+            WHERE CIA_CODCIA=:cia AND SUC_CODSUC=:suc
+              AND PPC_NUMPPC=:ppc AND ODC_NUMODC=:odc
+              AND ISNULL(Cantidad_Scaneada,0) <> ISNULL(Cantidd_abastecida,0)
+        """), {"cia": codcia, "suc": codsuc, "ppc": codppc, "odc": cododc}).scalar()
+
+        if pendientes and int(pendientes) > 0:
+            return {"ok": False, "msg": f"No se puede finalizar: faltan {pendientes} ítems por completar."}
+
+        # ✅ 2) validar inicio existe (tu lógica actual)
         row = conn.execute(text("""
             SELECT inicio_dt
             FROM dbo.PICKING_ASIGNACION
@@ -417,8 +536,9 @@ def marcar_fin_preparacion(codcia, codsuc, codppc, cododc):
         """), {"cia": codcia, "suc": codsuc, "ppc": codppc, "odc": cododc}).mappings().first()
 
         if not row or row["inicio_dt"] is None:
-            return {"msg": "No existe inicio", "tprep_min": None}
+            return {"ok": False, "msg": "No existe inicio", "tprep_min": None}
 
+        # ✅ 3) finalizar y calcular tiempo
         conn.execute(text("""
             UPDATE dbo.PICKING_ASIGNACION
             SET fin_dt = GETDATE(),
@@ -426,12 +546,7 @@ def marcar_fin_preparacion(codcia, codsuc, codppc, cododc):
                 updated_at = GETDATE()
             WHERE CIA_CODCIA=:cia AND SUC_CODSUC=:suc
               AND PPC_NUMPPC=:ppc AND ODC_NUMODC=:odc
-        """), {
-            "cia": codcia,
-            "suc": codsuc,
-            "ppc": codppc,
-            "odc": cododc
-        })
+        """), {"cia": codcia, "suc": codsuc, "ppc": codppc, "odc": cododc})
 
         mins = conn.execute(text("""
             SELECT tprep_min
@@ -440,8 +555,39 @@ def marcar_fin_preparacion(codcia, codsuc, codppc, cododc):
               AND PPC_NUMPPC=:ppc AND ODC_NUMODC=:odc
         """), {"cia": codcia, "suc": codsuc, "ppc": codppc, "odc": cododc}).scalar()
 
-        return {"msg": "Fin OK", "tprep_min": mins}
+        return {"ok": True, "msg": "Fin OK", "tprep_min": mins}
 
+
+
+def _fmt_dt_lima(dt) -> Optional[str]:
+    """Convierte datetime -> 'YYYY-MM-DD HH:MM:SS' (hora tal cual viene de SQL Server)."""
+    if dt is None:
+        return None
+    if isinstance(dt, datetime):
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
+    return str(dt)
+
+def obtener_asignacion(codcia, codsuc, codppc, cododc):
+    with engine.begin() as conn:
+        r = conn.execute(text("""
+            SELECT
+              registrado_cod, registrado_nom,
+              preparado_cod,  preparado_nom,
+              inicio_dt, fin_dt, tprep_min
+            FROM dbo.PICKING_ASIGNACION
+            WHERE CIA_CODCIA=:cia AND SUC_CODSUC=:suc
+              AND PPC_NUMPPC=:ppc AND ODC_NUMODC=:odc
+        """), {
+            "cia": codcia, "suc": codsuc, "ppc": codppc, "odc": cododc
+        }).mappings().first()
+
+        if not r:
+            return {}
+
+        d = dict(r)
+        d["inicio_dt"] = _fmt_dt_lima(d.get("inicio_dt"))
+        d["fin_dt"]    = _fmt_dt_lima(d.get("fin_dt"))
+        return d
 
 
 def obtener_nombre_usuario_erp(codcia, codaux):
@@ -547,3 +693,34 @@ def asignar_usuarios_preparacion(
         "registradoPor": row["registrado_nom"] if row else None,
         "preparadoPor": row["preparado_nom"] if row else None
     }
+
+def esta_finalizado(codcia, codsuc, codppc, cododc) -> bool:
+    with engine.begin() as conn:
+        fin = conn.execute(text("""
+            SELECT fin_dt
+            FROM dbo.PICKING_ASIGNACION
+            WHERE CIA_CODCIA=:cia AND SUC_CODSUC=:suc
+              AND PPC_NUMPPC=:ppc AND ODC_NUMODC=:odc
+        """), {"cia": codcia, "suc": codsuc, "ppc": codppc, "odc": cododc}).scalar()
+        return fin is not None
+
+def listar_detalle_historico(codcia, codsuc, codppc, cododc):
+    """Lee el detalle desde la tabla PICKING_HISTORICO."""
+    with engine.begin() as conn:
+        result = conn.execute(text("""
+            SELECT *
+            FROM dbo.PICKING_HISTORICO
+            WHERE CIA_CODCIA = :CIA_CODCIA
+              AND SUC_CODSUC = :SUC_CODSUC
+              AND PPC_NUMPPC = :PPC_NUMPPC
+              AND ODC_NUMODC = :ODC_NUMODC
+            ORDER BY Ubicacion ASC, ITEM ASC
+        """), {
+            "CIA_CODCIA": codcia,
+            "SUC_CODSUC": codsuc,
+            "PPC_NUMPPC": codppc,
+            "ODC_NUMODC": cododc,
+        })
+        cols = result.keys()
+        rows = result.fetchall()
+        return [dict(zip(cols, r)) for r in rows]

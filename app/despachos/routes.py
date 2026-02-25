@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, render_template
 from flask_jwt_extended import jwt_required
+from flask_jwt_extended import get_jwt_identity
 from .service import (
     listar_despachos_sp,
     generar_detalle_si_no_existe,
@@ -10,7 +11,8 @@ from .service import (
     listar_usuarios_preparacion,
     asignar_usuarios_preparacion,
     marcar_inicio_preparacion,
-    marcar_fin_preparacion
+    marcar_fin_preparacion,
+    tiene_inicio
 )
 
 despachos_bp = Blueprint("despachos", __name__)
@@ -93,7 +95,7 @@ def leer_detalle():
     if not codppc or not cododc:
         return jsonify({"msg": "Falta codppc o cododc"}), 400
 
-    detalle = listar_detalle_tabla("01", "01", codppc, cododc)
+    detalle = generar_detalle_si_no_existe("01", "01", codppc, cododc)
 
     return jsonify({
         "detalle": detalle,
@@ -110,9 +112,10 @@ def scan_item():
     codprod  = body.get("codprod")
     cantidad = body.get("cantidad", 1)
 
-    if not codppc or not cododc or not codprod:
+    if not cododc or not codprod:
         return jsonify({"msg": "Datos incompletos"}), 400
-
+    if not tiene_inicio("01", "01", codppc, cododc):
+        return jsonify({"ok": False, "msg": "Debe presionar INICIO antes de escanear."}), 409
     try:
         cantidad = float(cantidad)
     except (TypeError, ValueError):
@@ -138,11 +141,17 @@ def scan_item():
 def cabecera():
     codppc = request.args.get("codppc")
     cododc = request.args.get("cododc")
-
+    usuario_id = get_jwt_identity()  # 👈 ESTE ES EL USUARIO LOGUEADO
     if not codppc or not cododc:
         return jsonify({"msg": "Falta codppc o cododc"}), 400
 
-    cab = obtener_cabecera_pedido("01", "01", codppc, cododc)
+    cab = obtener_cabecera_pedido(
+        codcia="01",
+        codsuc="01",
+        codppc=codppc,
+        cododc=cododc,
+        usuario_id=usuario_id
+    )
 
     if not cab:
         return jsonify({"msg": "No se encontró cabecera"}), 404
@@ -186,8 +195,16 @@ def inicio():
     codppc = body.get("codppc")
     cododc = body.get("cododc")
 
-    cab = marcar_inicio_preparacion("01", "01", codppc, cododc)
-    return jsonify({"cabecera": cab, "msg": "Inicio OK"}), 200
+    if not codppc or not cododc:
+        return jsonify({"ok": False, "msg": "Faltan parámetros codppc/cododc"}), 400
+
+    r = marcar_inicio_preparacion("01", "01", codppc, cododc)
+
+    if not r.get("ok"):
+        return jsonify({"ok": False, "msg": r.get("msg")}), 409
+
+    # si quieres, aquí puedes retornar también cabecera completa si ya la tienes en otro endpoint
+    return jsonify({"ok": True, "msg": "Inicio OK"}), 200
 
 @despachos_bp.post("/detalle/fin")
 @jwt_required()
@@ -196,5 +213,23 @@ def fin():
     codppc = body.get("codppc")
     cododc = body.get("cododc")
 
-    cab = marcar_fin_preparacion("01", "01", codppc, cododc)
-    return jsonify({"cabecera": cab, "msg": "Fin OK"}), 200
+    if not codppc or not cododc:
+        return jsonify({"ok": False, "msg": "Faltan parámetros"}), 400
+
+    r = marcar_fin_preparacion("01", "01", codppc, cododc)
+
+    # ✅ Si el service bloquea (pendientes o sin inicio)
+    if not r.get("ok"):
+        return jsonify({
+            "ok": False,
+            "msg": r.get("msg", "No se puede finalizar")
+        }), 409
+
+    # ✅ Finalización correcta
+    return jsonify({
+        "ok": True,
+        "cabecera": {
+            "tprep_min": r.get("tprep_min")
+        },
+        "msg": r.get("msg", "Fin OK")
+    }), 200

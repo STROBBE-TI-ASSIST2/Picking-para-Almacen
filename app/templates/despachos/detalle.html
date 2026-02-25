@@ -16,14 +16,16 @@
     <h1>PREPARACION DE DESPACHO LOCAL PICKING</h1>
 
     <div class="actions">
-    <!-- ATRÁS: regresa a Preparación QR -->
-    <a class="icon-btn" href="{{ url_for('despachos_view') }}" title="Volver">
-      <img src="{{ url_for('static', filename='imagenes/back.png') }}" alt="Volver">
-    </a>
-    <button class="icon-btn" id="btnGuardar" title="Guardar y volver">
-      <img src="{{ url_for('static', filename='imagenes/save.png') }}" alt="Guardar">
-    </button>
-            <!-- Refresh -->
+      <!-- ATRÁS: regresa a Preparación QR -->
+      <a class="icon-btn" href="{{ url_for('despachos_view') }}" title="Volver">
+        <img src="{{ url_for('static', filename='imagenes/back.png') }}" alt="Volver">
+      </a>
+
+      <button class="icon-btn" id="btnGuardar" title="Guardar y volver">
+        <img src="{{ url_for('static', filename='imagenes/save.png') }}" alt="Guardar">
+      </button>
+
+      <!-- Refresh -->
       <button class="icon-btn" id="btnRefresh" title="Refrescar">
         <img src="{{ url_for('static', filename='imagenes/refresh.png') }}" alt="Refrescar">
       </button>
@@ -39,10 +41,7 @@
     <!-- CABECERA DATOS -->
     <section class="header-grid">
 
-      <div class="field">
-        <label>NRO. ORDEN</label>
-        <div class="value" id="nroOrden">-</div>
-      </div>
+      <!-- ✅ QUITADO: NRO. ORDEN -->
 
       <div class="field">
         <label>FECHA</label>
@@ -54,10 +53,7 @@
         <div class="value" id="nroOD">-</div>
       </div>
 
-      <div class="field">
-        <label>REGISTRADO POR</label>
-        <div class="value blue" id="registradoPor">-</div>
-      </div>
+      <!-- ✅ QUITADO: REGISTRADO POR -->
 
       <div class="field">
         <label>PREPARADO POR</label>
@@ -84,7 +80,6 @@
         </div>
       </div>
 
-
       <div class="field mini">
         <label>T.PREP</label>
         <div class="value1" id="tiempoPrep">-</div>
@@ -107,11 +102,9 @@
 
     </section>
 
-    <!-- INPUT ESCANEO -->
-
     <!-- TABLA -->
     <section class="table-wrap">
-      <table class="grid" id="tablaDetalle">
+      <table class="grid" id="tablaDetalle" tabindex="-1">
         <thead>
           <tr>
             <th>ITEM</th>
@@ -132,29 +125,44 @@
     </section>
 
   </main>
-<!-- MODAL USUARIOS -->
-<div id="modalUsuarios" class="modal hidden" aria-hidden="true">
-  <div class="modal-box">
-    <div class="modal-head">
-      <h2 id="modalTitulo">Seleccionar usuario</h2>
-      <button type="button" class="modal-close" id="btnCerrarModal">✕</button>
-    </div>
 
-    <input id="usuarioBuscar" class="modal-search" placeholder="Buscar por nombre o código…">
 
-    <div class="modal-table-wrap">
-      <table class="modal-table">
-        <thead>
-          <tr>
-            <th style="width:140px;">CÓDIGO</th>
-            <th>NOMBRE</th>
-          </tr>
-        </thead>
-        <tbody id="usuariosBody"></tbody>
-      </table>
+  <!-- MODAL USUARIOS -->
+  <div id="modalUsuarios" class="modal hidden" aria-hidden="true">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h2 id="modalTitulo">Seleccionar usuario</h2>
+        <button type="button" class="modal-close" id="btnCerrarModal">✕</button>
+      </div>
+
+      <input id="usuarioBuscar" class="modal-search" placeholder="Buscar por nombre o código…">
+
+      <div class="modal-table-wrap">
+        <table class="modal-table">
+          <thead>
+            <tr>
+              <th style="width:140px;">CÓDIGO</th>
+              <th>NOMBRE</th>
+            </tr>
+          </thead>
+          <tbody id="usuariosBody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
-</div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <div id="confirmModal" class="confirm hidden" aria-hidden="true">
+    <div class="confirm-card">
+      <div class="confirm-title" id="confirmTitle">Confirmar</div>
+      <div class="confirm-msg" id="confirmMsg"></div>
+      <div class="confirm-actions">
+        <button id="confirmNo" class="btn-secondary">Cancelar</button>
+        <button id="confirmYes" class="btn-primary">Aceptar</button>
+      </div>
+    </div>
+  </div>
 
   <script src="{{ url_for('static', filename='js/despachos_detalle_front.js') }}" defer></script>
 </body>
