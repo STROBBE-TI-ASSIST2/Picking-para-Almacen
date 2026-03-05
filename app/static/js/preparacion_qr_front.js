@@ -38,6 +38,7 @@ document.querySelectorAll(".chip").forEach(btn => {
   });
 });
 
+
 // =========================
 // Eventos de filtros / paginación
 // =========================
@@ -61,14 +62,15 @@ next?.addEventListener("click", () => {
 
 // =========================
 // Helpers para pintar tarjetas
-// =========================
 function estadoToClass(estadoRaw) {
-  const s = (estadoRaw ?? "").toString().toUpperCase();
+  const s = (estadoRaw ?? "").toString().toUpperCase().trim();
 
-  if (s.includes("PEND")) return "pendiente";
-  if (s.includes("ATEND")) return "atendido";
-  if (s.includes("INICI")) return "iniciada";
+  // Tus estados reales
+  if (s.includes("ABASTEC")) return "pendiente";               // naranja
+  if (s.includes("PREPARACION") || s.includes("INICIADA")) return "iniciada"; // verde
+  if (s === "TODOS") return "atendido";                        // gris (o cambia a "pendiente" si prefieres)
 
+  // fallback por si llega otro texto
   return "pendiente";
 }
 
@@ -78,14 +80,15 @@ function formatFechaES(fechaRaw) {
   const d = new Date(fechaRaw);
   if (isNaN(d)) return fechaRaw;
 
-  return d.toLocaleString("es-PE", {
+  return new Intl.DateTimeFormat("es-PE", {
+    timeZone: "America/Lima",     // ✅ fuerza Lima (UTC-5)
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
     hour12: false
-  });
+  }).format(d);
 }
 
 function escapeHtml(v) {
@@ -143,7 +146,7 @@ async function cargar(resetToFirstPage = false) {
 
       const estadoClass = estadoToClass(estadoTxt);
 
-      const card = document.createElement("div");
+      const card = document.createElement("a");
       card.className = "card card-click";
       card.dataset.mpc = codppc;
       card.dataset.odc = (row.odc_numodc ?? "");

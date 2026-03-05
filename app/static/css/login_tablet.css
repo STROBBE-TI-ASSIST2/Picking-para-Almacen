@@ -1,5 +1,5 @@
 /* =========================
-   BASE / RESET
+   RESET
 ========================= */
 * {
   box-sizing: border-box;
@@ -8,212 +8,207 @@
 }
 
 html, body {
-  width: 100vw;
-  height: 100vh;
-  font-family: 'Segoe UI', sans-serif;
-  overflow: hidden;
+  height: 100%;
+  font-family: "Segoe UI", sans-serif;
 }
 
 /* =========================
-   LAYOUT
+   FONDO
 ========================= */
-.login-container {
+.login-bg {
+  min-height: 100dvh;
+  background: url("../imagenes/fondo_login_tablet.png") center / cover no-repeat;
   display: flex;
-  width: 100%;
-  height: 100%;
-}
-
-/* Izquierda - Imagen */
-.login-left {
-  flex: 1;
-  background-color: #000;
-}
-
-.login-left img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* Derecha - Login */
-.login-right {
-  flex: 1;
-  background: linear-gradient(to right, #8CBAD9, #2C4D82);
-  color: white;
-  padding: 2vh 2vw;
-  display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
-  position: relative;
+  padding: 20px;
+   background-size: cover;  /* ← ocupa toda la pantalla */
+  background-attachment: fixed;
 }
 
-/* Título */
-.login-right h2 {
-  font-size: clamp(2rem, 4vw, 3rem);
-  margin-bottom: 1.25rem;
-  transform: translateY(-2vh);
-}
+/* =========================
+   TARJETA GLASS ADAPTATIVA
+========================= */
+.login-card {
+  width: 120%;
+  max-width: 520px;
+  padding: clamp(24px, 4vw, 40px);
 
-/* Formulario */
-.login-right form {
+  border-radius: 25px;
+
+  background: rgba(255,255,255,0.15);
+  border: 2px solid rgba(255,255,255,0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  width: 100%;
-  max-width: 450px;
-  padding: 0 2vw;
-  transform: translateY(-2.5vh);
+  align-items: center;
 }
 
-.login-right label {
-  font-size: 1.1rem;
-  font-weight: bold;
-}
-
-.login-right input {
-  padding: 0.8rem;
-  border: none;
-  border-radius: 10px;
-  font-size: 1rem;
-  width: 100%;
-  outline: none;
-}
-
-/* Botón */
-.login-right button {
-  margin-top: 1rem;
-  padding: 0.8rem 2rem;
-  border: none;
-  border-radius: 20px;
-  background-color: #6d93a6;
+/* TÍTULO */
+.login-title {
   color: white;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background 0.3s;
-  width: auto;
-  margin-left: auto;
-  margin-right: auto;
-  min-width: 150px;
-  font-weight: bold;
-  transform: translateY(-1vh);
+  font-size: clamp(22px, 3vw, 34px);
+  font-weight: 900;
+  text-align: center;
+  margin-bottom: 25px;
+  letter-spacing: 1px;
 }
 
-/* Logo central */
+/* =========================
+   FORM
+========================= */
+.login-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* =========================
+   INPUT GROUP (contenedor cápsula)
+========================= */
+.input-group {
+  position: relative;
+  width: 100%;
+}
+
+.input-group input {
+  width: 100%;
+  height: 50px;
+  padding: 0 18px;
+
+  border-radius: 999px;
+  border: 2px solid rgba(255,255,255,0.7);
+
+  background: rgba(255,255,255,0.1);
+  color: white;
+  font-size: 16px;
+
+  outline: none;
+  transition: 0.2s ease;
+}
+
+/* Label flotante */
+.input-group label {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255,255,255,0.8);
+  font-weight: 600;
+  pointer-events: none;
+  transition: 0.2s ease;
+}
+
+/* Cuando hay foco o texto */
+.input-group input:focus,
+.input-group input:not(:placeholder-shown) {
+  background: rgba(255,255,255,0.18);
+  border-color: white;
+}
+
+.input-group input:focus + label,
+.input-group input:not(:placeholder-shown) + label {
+  top: -8px;
+  left: 14px;
+  font-size: 12px;
+  padding: 0 6px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 6px;
+}
+
+/* =========================
+   BOTÓN
+========================= */
+.btn-login {
+  margin-top: 10px;
+  height: 48px;
+  border-radius: 999px;
+  border: none;
+
+  background: #6d93a6;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.btn-login:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+
+/* ERROR */
+.error {
+  min-height: 20px;
+  text-align: center;
+  font-weight: bold;
+  color: #ffd1d1;
+}
+
+/* LOGO */
 .logo {
-  margin-top: clamp(0.5rem, 1.5vh, 1rem);
+  margin-top: 15px;
   display: flex;
   justify-content: center;
-  transform: translateY(-2vh);
 }
 
 .logo img {
-  width: clamp(120px, 20vw, 200px);
-  height: auto;
-  border-radius: 50%;
+  width: clamp(140px, 25vw, 260px);
 }
+/* SOCIALES: SIEMPRE abajo-derecha */
+.social-icons{
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 9999;
 
-/* Íconos flotantes (esquina) - aún más arriba */
-.social-icons {
-  position: absolute;
-  right: 1rem;
-  bottom: clamp(10rem, 20vh, 14rem); /* subidos más en desktop */
   display: flex;
   flex-direction: column;
-  gap: 0.7rem;
+  gap: 10px;
 }
 
-.social-icons img {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  transition: transform 0.2s ease;
+/* Tamaño y estilo */
+.social-icons img{
+  width: 42px;
+  height: 42px;
+
+  border-radius: 10px;
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.35);
+  padding: 6px;
+
+  box-shadow: 0 10px 18px rgba(0,0,0,.20);
+  transition: transform .12s ease, filter .2s ease;
 }
 
-.social-icons a:hover img {
-  transform: translateY(-2px) scale(1.05);
+.social-icons a:hover img{
+  transform: translateY(-2px) scale(1.03);
+  filter: brightness(1.05);
 }
 
+/* En móviles/tablets: un poquito más arriba por la barra del navegador */
+@media (max-width: 768px){
+  .social-icons{
+    right: 12px;
+    bottom: 70px;
+  }
+  .social-icons img{
+    width: 38px;
+    height: 38px;
+  }
+}
 /* =========================
-   RESPONSIVE (celulares / vertical)
+   RESPONSIVE EXTRA PEQUEÑO
 ========================= */
-@media (max-width: 600px), (orientation: portrait) {
-  .login-container {
-    flex-direction: column;
-  }
-
-  .login-left,
-  .login-right {
-    flex: none;
-    width: 100%;
-    height: auto;
-  }
-
-  .login-left img {
-    height: 200px;
-    object-fit: cover;
-  }
-
-  .login-right {
-    padding: 1.5rem;
-    align-items: center;
-    min-height: 100dvh;
-  }
-
-  .login-right h2 {
-    font-size: 1.8rem;
-    margin-bottom: 1rem;
-    transform: translateY(-3vh);
-  }
-
-  .login-right form {
-    padding: 0;
-    width: 100%;
-    max-width: 100%;
-    transform: translateY(-4vh);
-  }
-
-  .login-right input {
-    font-size: 1rem;
-    padding: 0.7rem;
-  }
-
-  .login-right button {
-    font-size: 1rem;
-    padding: 0.7rem 1.5rem;
-    margin-top: 0.8rem;
-    min-width: 130px;
-    transform: translateY(-2vh);
-  }
-
-  .logo {
-    margin-top: clamp(0.5rem, 1vh, 1rem);
-    transform: translateY(-5vh);
-  }
-
-  .logo img {
-    width: 120px;
-  }
-
-  /* Íconos sociales aún más arriba en móvil */
-  .social-icons {
-    right: 0.75rem;
-    bottom: clamp(12rem, 22dvh, 16rem); /* subidos todavía más en móvil */
-  }
-
-  .social-icons img {
-    width: 32px;
-    height: 32px;
-  }
-}
-
-/* =========================
-   ACCESIBILIDAD
-========================= */
-@media (prefers-reduced-motion: reduce) {
-  .social-icons img,
-  .social-icons a:hover img {
-    transition: none;
-    transform: none !important;
+@media (max-width: 400px) {
+  .login-card {
+    padding: 20px;
   }
 }

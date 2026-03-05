@@ -21,27 +21,29 @@ def login():
     if not user:
         return jsonify({"msg": "Usuario o contraseña incorrectos"}), 401
 
+    # ✅ Mantener identity simple (string) para no romper otros lugares
+    # Lo ideal: usar el codigo ERP (AUXCODAUX) si existe
+    identity = str(user.get("codigo") or user.get("id_usuario") or user.get("username") or "")
+
     access_token = create_access_token(
-        identity=str(user["id_usuario"]),
+        identity=identity,
         additional_claims={
-            "username": user["username"],
-            "area": user["area"],
-            "cargo": user["cargo"],
-            "codigo": user["codigo"],
+            "username": user.get("username") or "",
+            "nombre": user.get("nombre") or "",
+            "codigo": user.get("codigo") or "",
+
+            # opcionales (si no existen, no rompen)
+            "area": user.get("area") or "",
+            "cargo": user.get("cargo") or "",
         }
     )
 
-    # ✅ Respuesta JSON normal
     resp = jsonify({
         "msg": "login ok",
         "user": user
-        # Si quieres mantenerlo por compatibilidad:
-        # "access_token": access_token
     })
 
-    # ✅ CLAVE: setear JWT en cookie
     set_access_cookies(resp, access_token)
-
     return resp, 200
 
 
